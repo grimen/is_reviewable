@@ -1,0 +1,182 @@
+h1. IS_REVIEWABLE
+
+_Rails: Make an ActiveRecord resource ratable/reviewable (rating + comment), without the usual extra code-smell._
+
+h2. Installation
+
+<pre>sudo gem install grimen-is_reviewable</pre>
+
+h2. Usage
+
+1. Generate migration:
+
+<pre>
+$ ./script/generate is_reviewable_migration
+</pre>
+
+Generates @db/migrations/{timestamp}_is_reviewable_migration@ with:
+
+<pre>
+class IsReviewableMigration < ActiveRecord::Migration
+  def self.up
+    create_table :reviews do |t|
+      t.references  :reviewable,    :polymorphic => true
+      t.references  :reviewer,      :polymorphic => true
+      
+      t.decimal     :rating
+      t.string      :title          # optional
+      t.text        :body           # optional
+      
+      t.timestamps
+    end
+    
+    add_index :reviews, :reviewer_id
+    add_index :reviews, :reviewer_type
+    add_index :reviews, [:reviewer_id, :reviewer_type]
+    add_index :reviews, [:reviewable_id, :reviewable_type]
+  end
+  
+  def self.down
+    drop_table :reviews
+  end
+end
+</pre>
+
+2. Make your model reviewable:
+
+<pre>
+class Post < ActiveRecord::Base
+  is_reviewable :scale => 0..5
+end
+</pre>
+
+or, with explicit reviewer:
+
+<pre>
+class Book < ActiveRecord::Base
+  # Setup associations for the reviewer class automatically, and specify an explicit scale instead.
+  is_reviewable :by => :user, :scale => [1,2,3,4,5]
+end
+</pre>
+
+*Note:* @:by@ is optional if you choose any of @User@ or @Account@ as reviewer classes.
+
+3. ...and here we go:
+
+Usage examples:
+
+<pre>
+TODO: Give some usage examples here
+</pre>
+
+h2. Arguments
+
+The @is_reviewable@ mixin takes some hash arguments for customization:
+
+* @:by@ - the reviewer model, e.g. User, Account, etc. (accepts either symbol or class, i.e. @User@ <=> @:user@ <=> @:users@). The reviewer model will be setup for you. Note: Polymorhic, so it accepts any model. Default: @User@, or auto-detection fails.
+* @:scale@ or @values@ - range, or array, of valid rating values. Default: @1..5@. Note: Negative values are allowed too, and a range of values are not required, i.e. [-1, 1] is valid as well as [1,3,5]. =)
+* @:precision@ - maximum number of digits for the average rating value. Default: @1@.
+* @:anonymous@ - accept anonymous users uniquely identified by IP (well...you handle the bots =D). See examples below how to use this in compare to reviewer model. Default: @false@.
+
+h2. Finders
+
+IsReviewable has plenty of useful finders implemented using named scopes. Here they are:
+
+*@Review@*
+
+Order:
+
+* @in_order@ - most recent reviews last.
+* @most_recent@ - most recent reviews first.
+* @lowest_rating@ - reviews with lowest ratings first.
+* @highest_rating@ - reviews with lowest ratings first.
+
+Filter:
+
+* @limit(<number_of_items>)@ - pick maximum @<number_of_items>@ reviews.
+* @limit_by_time(<by_earliest_datetime>)@ - pick reviews created since @<by_earliest_datetime>@.
+* @with_rating(<rating_value_or_range>)@ - pick reviews with(in) rating value (or range) @<rating_value_or_range>@.
+* @with_comment@ - pick reviews with comments, i.e. "full reviews".
+* @of_reviewable_type(<reviewable_type>)@ - pich reviews of @<reviewable_type>@ type of reviewable models.
+* @by_reviewer_type(<reviewer_type>)@ - pich reviews of @<reviewer_type>@ type of reviewer models.
+* @on(<reviewable_object>)@ - reviews on the reviewable object @<reviewable_object>@ .
+* @by(<reviewer_object>)@ - reviews by the @<reviewer_object>@ type of reviewer models.
+
+Usage examples:
+
+<pre>
+TODO: Give some usage examples here
+@user = User.first
+@post = Post.first
+
+@user.reviews.on(@post) # => nil
+@post.reviews.by(@user) # => nil
+
+Review.on(@post@)
+Review.by(@user@)
+
+...
+</pre>
+
+h2. Caching
+
+If the visitable class table - in the sample above @Post@ - contains a columns @reviews_count@ and @average_rating@, then a cached value will be maintained within it for the number of reviews and the average rating the object have got.
+
+Additional caching fields (to a reviewable model table):
+
+<pre>
+class AddIsReviewableToPostsMigration < ActiveRecord::Migration
+  def self.up
+    # Enable is_reviewable-caching.
+    add_column :posts, :cached_total_reviews, :integer
+    add_column :posts, :cached_average_rating, :integer
+  end
+  
+  def self.down
+    remove_column :posts, :cached_total_reviews
+    remove_column :posts, :cached_average_rating
+  end
+end
+</pre>
+
+h2. Additional Use Cases
+
+IsReviewable is designed in such way that you as a developer are not locked to how traditional rating works. As an example, this is how you could implement like/dislike (like VoteFu) pattern using IsReviewable:
+
+Example:
+
+<pre>
+class Post < ActiveRecord::Base
+  is_reviewable :by => :users, :values => [-1, 1]
+end
+</pre>
+
+*Note:* @:values@ is an alias for @:scale@ for semantical reasons in cases like these.
+
+h2. Dependencies
+
+Basic usage:
+
+* "rails":http://github.com/rails/rails (well...)
+
+For running tests:
+
+* sqlite3-ruby
+* "thoughtbot-shoulda":http://github.com/thoughtbot/shoulda
+* "nakajima-acts_as_fu":http://github.com/nakajima/acts_as_fu
+* "jgre-monkeyspecdoc":http://github.com/jgre/monkeyspecdoc
+
+h2. Notes
+
+* Tested with Ruby 1.9.1.
+* Let me know if you find any bugs; not used in production yet so consider this a concept version.
+* Make alias helpers to implement functionality like VoteFu (http://github.com/peteonrails/vote_fu), simply just aliasing methods with existing ones with hardcoded parameters. Not required because this is supported already, it's all about semantics and sassy code.
+
+h2. TODO
+
+* Refactor out general methods to IsReviewable::Support.
+* Reviewable on multiple contexts, e.g. @is_reviewable :on => [:acting, :writing, ...]@. Alias method @is_reviewable_on@.
+
+h2. License
+
+Copyright (c) Jonas Grimfelt, released under the MIT-license.

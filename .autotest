@@ -1,0 +1,6 @@
+require 'autotest-mac' if RUBY_PLATFORM =~ /darwin/
+require 'autotest/redgreen'
+
+Autotest.add_hook :initialize do |autotest|
+  %w{.git vendor}.each { |exception| autotest.add_exception(exception) }
+end
