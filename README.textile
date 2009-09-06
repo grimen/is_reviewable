@@ -41,9 +41,11 @@ class IsReviewableMigration < ActiveRecord::Migration
   def self.up
     create_table :reviews do |t|
       t.references  :reviewable,    :polymorphic => true
-      t.references  :reviewer,      :polymorphic => true
       
-      t.decimal     :rating
+      t.references  :reviewer,      :polymorphic => true
+      t.string      :ip,            :limit => 24
+      
+      t.float       :rating
       t.string      :title          # optional
       t.text        :body           # optional
       
