@@ -2,9 +2,31 @@ h1. IS_REVIEWABLE
 
 _Rails: Make an ActiveRecord resource ratable/reviewable (rating + comment), without the usual extra code-smell._
 
+h2. Why another rating-plugin?
+
+Many reasons; I felt the existing plugins all suck in one way or another (sorry, no hating). This is why IsReviweable is better if you ask me:
+
+* Don't do assumptions that your rater/reviewer model is @User@. Relying on polymorphic assocation completely, so your reviewer can be...@DonaldDuck@.
+* ...and optionally even accepts an IP as rater/reviewer. Disabled by default though.
+* Don't make assumptions about your Review model - you can extend it without meta-programming, good 'ol subclassing folks.
+* Don't make assumptions about what rating scale you wanna have, how the rating scale should be divided, or average rating rounding precision. The 1-5 scale is 80% of the cases, but there's no real reason or overhead to support any scale. To sum it up: Scale can consist negative and/or positive range or explicit integer/float values...and you won't even notice the difference on the outside. See the examples! =)
+* Possible to submit additional custom attributes while rating, such as @title@ and @body@ to make up a "review" instead of just a "rating". Feel free.
+* Very sassy finders implemented using named scopes, i.e. less code smell.
+* No lame out-of-the-box view/javascripts/images that you probably won't use in the final product anyway. That should be an extension to the plugin.
+* Transparently supports column-caching expensive calculations for the reviewable model. Will simply be turned on if these fields exists - otherwise fallback with an optimized DB hit instead.
+* If I can say it myself...this code should be very solid, optimized, and DRY. Shoot the messenger! o<;)
+
+If you got suggestions how it could be even better, just hit me up. I appreciate critics for the cause of a rock solid plugin for rating/reviewing. Such a common "problem" as rating/reviewing should have had a great solution by now!
+
 h2. Installation
 
+Gem:
+
 <pre>sudo gem install grimen-is_reviewable</pre>
+
+Plugin:
+
+<pre>./script/plugin install git://github.com/grimen/is_reviewable.git</pre>
 
 h2. Usage
 
@@ -118,6 +140,18 @@ Review.by(@user@)
 ...
 </pre>
 
+h2. Extend the Review model
+
+This is optional, but if you wanna be in control of your models (in this case @Review@) you can take control like this:
+
+<pre>
+class Review < IsReviewable::Review
+  
+  # Do what you do best here... (stating the obvious: core IsReviewable associations, named scopes, etc. will be inherited)
+  
+end
+</pre>
+
 h2. Caching
 
 If the visitable class table - in the sample above @Post@ - contains a columns @reviews_count@ and @average_rating@, then a cached value will be maintained within it for the number of reviews and the average rating the object have got.
@@ -174,7 +208,8 @@ h2. Notes
 
 h2. TODO
 
-* Refactor out general methods to IsReviewable::Support.
+* Make the named scopes tests to pass - WTF? =S
+* More thorough tests (solve above first)
 * Reviewable on multiple contexts, e.g. @is_reviewable :on => [:acting, :writing, ...]@. Alias method @is_reviewable_on@.
 
 h2. License
