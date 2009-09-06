@@ -182,6 +182,7 @@ module IsReviewable
       # Calculate average rating for this reviewable object within a domain of reviewers.
       #
       def average_rating_by(identifiers)
+        # FIXME: Only count non-nil ratings, i.e. See "average_rating".
         self.is_reviewable_options[:review_class].average(:rating,
             :conditions => self.reviewer_conditions(identifiers).merge(self.reviewable_conditions)
           ).to_f.round(self.is_reviewable_options[:total_precision])
@@ -237,6 +238,7 @@ module IsReviewable
           review_values[:rating] = review_values[:rating].to_f if review_values[:rating].present?
           
           if review_values[:rating].present? && !self.valid_rating_value?(review_values[:rating])
+            ::IsReviewable.log "Invalid rating value: #{review_values[:rating]} not in [#{self.rating_scale.join(', ')}].", :warn
             raise IsReviewableError, "Invalid rating value: #{review_values[:rating]} not in [#{self.rating_scale.join(', ')}]."
           end
           
@@ -258,7 +260,7 @@ module IsReviewable
                 r.reviewer_id   = reviewer.id
                 r.reviewer_type = reviewer.class.name
               else
-                r.ip            = reviewer.to_s
+                r.ip            = reviewer
               end
               r.rating          = review_values[:rating]
               r.body            = review_values[:body]
@@ -283,7 +285,8 @@ module IsReviewable
           
           review.save && self.save_without_validation
         rescue Exception => e
-          raise IsReviewableError, "Could not save: #{e}"
+          ::IsReviewable.log "Could not create/update review #{review.inspect} by #{reviewer.inspect}: #{e}", :warn
+          raise IsReviewableError, "Could not create/update review #{review.inspect} by #{reviewer.inspect}: #{e}"
         end
       end
       
@@ -309,7 +312,8 @@ module IsReviewable
           
           self.save_without_validation
         else
-          ::IsReviewable.log "Failed to un-review #{review.inspect}.", :warn
+          ::IsReviewable.log "Could not save review #{review.inspect} by #{reviewer.inspect}: #{e}", :warn
+          raise IsReviewableError, "Could not un-review #{review.inspect} by #{reviewer.inspect}: #{e}"
         end
       end
       

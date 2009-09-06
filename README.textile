@@ -32,9 +32,7 @@ h2. Usage
 
 1. Generate migration:
 
-<pre>
-$ ./script/generate is_reviewable_migration
-</pre>
+<pre>$ ./script/generate is_reviewable_migration</pre>
 
 Generates @db/migrations/{timestamp}_is_reviewable_migration@ with:
 
@@ -208,6 +206,7 @@ h2. Notes
 
 h2. TODO
 
+* Make @review!@ accept any additional attributes to update except for the ones used by IsReviewable, i.e. ~100% customizable review attributes.
 * Make the named scopes tests to pass - WTF? =S
 * More thorough tests (solve above first)
 * Reviewable on multiple contexts, e.g. @is_reviewable :on => [:acting, :writing, ...]@. Alias method @is_reviewable_on@.

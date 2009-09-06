@@ -8,8 +8,6 @@ module IsReviewable
   
   extend self
   
-  IsReviewableError = ::Class.new(::StandardError)
-  
   @logger = Logger.new(STDOUT)
   
   def log(message, level = :info)
