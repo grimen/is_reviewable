@@ -23,7 +23,7 @@ begin
     gem.email = EMAIL
     
     gem.require_paths = %w{lib}
-    gem.files = SUPPORT_FILES << %w(MIT-LICENSE Rakefile) << Dir.glob(File.join('{lib,test,rails}', '**', '*'))
+    gem.files = SUPPORT_FILES << %w(MIT-LICENSE Rakefile) << Dir.glob(File.join('{generators,lib,test,rails}', '**', '*'))
     gem.executables = %w()
     gem.extra_rdoc_files = SUPPORT_FILES
   end

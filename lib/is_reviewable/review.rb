@@ -18,7 +18,8 @@ module IsReviewable
     named_scope :between_dates,       :conditions => lambda { |from_date, to_date| {:created_at => from_date..to_date} }
     named_scope :with_rating,         :conditions => lambda { |rating_value_or_range| {:rating => rating_value_or_range} }
     named_scope :with_a_rating,       :conditions => ['rating IS NOT NULL']
-    named_scope :with_a_comment,      :conditions => ['body IS NOT NULL && LENGTH(body) > 0']
+    named_scope :with_a_comment,      :conditions => ['body IS NOT NULL AND LENGTH(body) > 0']
+    named_scope :complete,            :conditions => ['rating IS NOT NULL AND body IS NOT NULL AND LENGTH(body) > 0']
     named_scope :of_reviewable_type,  :conditions => lambda { |type| Support.polymorphic_conditions_for(type, :type) }
     named_scope :by_reviewer_type,    :conditions => lambda { |type| Support.polymorphic_conditions_for(type, :type) }
     named_scope :on,                  :conditions => lambda { |reviewable| Support.polymorphic_conditions_for(reviewable) }

@@ -32,21 +32,21 @@ module IsReviewable
             :scale      => options[:values] || options[:range] || DEFAULT_SCALE,
             :accept_ip  => options[:anonymous] || DEFAULT_ACCEPT_IP # i.e. also accepts unique IPs as reviewer
           )
+        scale = options[:scale]
         if options[:step].blank? && options[:steps].blank?
-          options[:steps] = options[:scale].last - options[:scale].first + 1
+          options[:steps] = scale.last - scale.first + 1
         else
           # use :step or :steps beneath
         end
-        options[:total_precision] ||= options[:average_precision] || options[:scale].first.to_s.split('.').last.size # == 1
+        options[:total_precision] ||= options[:average_precision] || scale.first.to_s.split('.').last.size # == 1
         
         # Check for incorrect input values, and handle ranges of floats with help of :step. E.g. :scale => 1.0..5.0.
-        if options[:scale].is_a?(Range) && options[:scale].first.is_a?(Float)
-          unless options[:step].present?
-            options[:step] = (options[:scale].last - options[:scale].first) / (options[:steps] - 1)
-          end
-          options[:scale] = options[:scale].first.step(options[:scale].last, options[:step]).collect { |value| value }
+        
+        if scale.is_a?(Range) && scale.first.is_a?(Float)
+          options[:step] = (scale.last - scale.first) / (options[:steps] - 1) if options[:step].blank?
+          options[:scale] = scale.first.step(scale.last, options[:step]).collect { |value| value }
         else
-          options[:scale] = options[:scale].to_a
+          options[:scale] = scale.to_a.collect! { |v| v.to_f }
         end
         raise IsReviewableError, ":scale/:range/:values must consist of numeric values only." unless options[:scale].all? { |v| v.is_a?(Numeric) }
         raise IsReviewableError, ":total_precision must be an integer." unless options[:total_precision].is_a?(Fixnum)
@@ -286,7 +286,7 @@ module IsReviewable
           review.save && self.save_without_validation
         rescue Exception => e
           ::IsReviewable.log "Could not create/update review #{review.inspect} by #{reviewer.inspect}: #{e}", :warn
-          raise IsReviewableError, "Could not create/update review #{review.inspect} by #{reviewer.inspect}: #{e}"
+          raise ::IsReviewable::IsReviewableError, "Could not create/update review #{review.inspect} by #{reviewer.inspect}: #{e}"
         end
       end
       

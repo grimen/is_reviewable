@@ -104,7 +104,7 @@ h2. Finders
 
 IsReviewable has plenty of useful finders implemented using named scopes. Here they are:
 
-*@Review@*
+h3. @Review@
 
 Order:
 
@@ -116,9 +116,12 @@ Order:
 Filter:
 
 * @limit(<number_of_items>)@ - pick maximum @<number_of_items>@ reviews.
-* @limit_by_time(<by_earliest_datetime>)@ - pick reviews created since @<by_earliest_datetime>@.
+* @recent(<datetime_or_size>)@ - pick reviews created since @<by_earliest_datetime>@.
+* @between_dates(<from_date>, to_date)@ - pick reviews created between two datetimes.
 * @with_rating(<rating_value_or_range>)@ - pick reviews with(in) rating value (or range) @<rating_value_or_range>@.
-* @with_comment@ - pick reviews with comments, i.e. "full reviews".
+* @with_a_rating@ - pick reviews with a rating value, i.e. not nil.
+* @with_comment@ - pick reviews with comments, i.e. not nile.
+* @complete@ - pick reviews with both rating and comments, i.e. "full reviews" where.
 * @of_reviewable_type(<reviewable_type>)@ - pich reviews of @<reviewable_type>@ type of reviewable models.
 * @by_reviewer_type(<reviewer_type>)@ - pich reviews of @<reviewer_type>@ type of reviewer models.
 * @on(<reviewable_object>)@ - reviews on the reviewable object @<reviewable_object>@ .
@@ -128,14 +131,15 @@ Usage examples:
 
 <pre>
 TODO: Give some usage examples here
+
 @user = User.first
 @post = Post.first
 
-@user.reviews.on(@post) # => nil
-@post.reviews.by(@user) # => nil
+@user.reviews.on(@post) # => [all reviews by @user on @post]
+@post.reviews.by(@user) # => [all reviews by @user on @post] (equivalent with above)
 
-Review.on(@post@)
-Review.by(@user@)
+Review.on(@post) # => [all reviews on @user] <=> @post.reviews
+Review.by(@user) # => [all reviews by @user] <=> @user.reviews
 
 ...
 </pre>
@@ -209,10 +213,11 @@ h2. Notes
 h2. TODO
 
 * Make @review!@ accept any additional attributes to update except for the ones used by IsReviewable, i.e. ~100% customizable review attributes.
-* Make the named scopes tests to pass - WTF? =S
+* Make the named scopes tests to pass - WTF, ActAsFu-issue? =S
 * More thorough tests (solve above first)
+* Make 
 * Reviewable on multiple contexts, e.g. @is_reviewable :on => [:acting, :writing, ...]@. Alias method @is_reviewable_on@.
 
 h2. License
 
-Copyright (c) Jonas Grimfelt, released under the MIT-license.
+Copyright (c) 2009 Jonas Grimfelt, released under the MIT-license.
