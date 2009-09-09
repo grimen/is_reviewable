@@ -231,8 +231,8 @@ module IsReviewable
       #
       def review!(identifiers_and_options)
         begin
-          review = self.review_by(identifiers_and_options)
           reviewer = self.validate_reviewer(identifiers_and_options)
+          review = self.review_by(identifiers_and_options)
           
           review_values = identifiers_and_options.slice(:rating, :body, :title)
           review_values[:rating] = review_values[:rating].to_f if review_values[:rating].present?
@@ -307,7 +307,7 @@ module IsReviewable
           
           if self.reviewable_caching_fields?(:average_rating)
             self.cached_average_rating = self.average_rating(true)
-            #self.cached_average_rating = (self.cached_average_rating - review_rating) / self.cached_total_reviews.to_f
+            # self.cached_average_rating = (self.cached_average_rating - review_rating) / self.cached_total_reviews.to_f
           end
           
           self.save_without_validation
