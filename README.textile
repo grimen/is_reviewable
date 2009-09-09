@@ -1,4 +1,4 @@
-h1. IS_REVIEWABLE
+h1. IS_REVIEWABLE ~ concept version ~
 
 _Rails: Make an ActiveRecord resource ratable/reviewable (rating + comment), without the usual extra code-smell._
 
@@ -12,7 +12,7 @@ Many reasons; I felt the existing plugins all suck in one way or another (sorry,
 * Don't make assumptions about what rating scale you wanna have, how the rating scale should be divided, or average rating rounding precision. The 1-5 scale is 80% of the cases, but there's no real reason or overhead to support any scale. To sum it up: Scale can consist negative and/or positive range or explicit integer/float values...and you won't even notice the difference on the outside. See the examples! =)
 * Possible to submit additional custom attributes while rating, such as @title@ and @body@ to make up a "review" instead of just a "rating". Feel free.
 * Very sassy finders implemented using named scopes, i.e. less code smell.
-* No lame out-of-the-box view/javascripts/images that you probably won't use in the final product anyway. That should be an extension to the plugin.
+* No lame out-of-the-box views/javascripts/images that you probably won't use in the final product anyway. That should be an extension to the plugin.
 * Transparently supports column-caching expensive calculations for the reviewable model. Will simply be turned on if these fields exists - otherwise fallback with an optimized DB hit instead.
 * If I can say it myself...this code should be very solid, optimized, and DRY. Shoot the messenger! o<;)
 
@@ -20,11 +20,15 @@ If you got suggestions how it could be even better, just hit me up. I appreciate
 
 h2. Installation
 
-Gem:
+*Gem:*
 
 <pre>sudo gem install grimen-is_reviewable</pre>
 
-Plugin:
+and in @config/environment.rb@:
+
+<pre>config.gem 'grimen-is_reviewable', :lib => 'is_reviewable'</pre>
+
+*Plugin:*
 
 <pre>./script/plugin install git://github.com/grimen/is_reviewable.git</pre>
 
@@ -77,7 +81,7 @@ or, with explicit reviewer:
 <pre>
 class Book < ActiveRecord::Base
   # Setup associations for the reviewer class automatically, and specify an explicit scale instead.
-  is_reviewable :by => :user, :scale => [1,2,3,4,5]
+  is_reviewable :by => :user, :values => [1,2,3,4,5]
 end
 </pre>
 
@@ -96,9 +100,9 @@ h2. Arguments
 The @is_reviewable@ mixin takes some hash arguments for customization:
 
 * @:by@ - the reviewer model, e.g. User, Account, etc. (accepts either symbol or class, i.e. @User@ <=> @:user@ <=> @:users@). The reviewer model will be setup for you. Note: Polymorhic, so it accepts any model. Default: @User@, or auto-detection fails.
-* @:scale@ or @values@ - range, or array, of valid rating values. Default: @1..5@. Note: Negative values are allowed too, and a range of values are not required, i.e. [-1, 1] is valid as well as [1,3,5]. =)
-* @:precision@ - maximum number of digits for the average rating value. Default: @1@.
-* @:anonymous@ - accept anonymous users uniquely identified by IP (well...you handle the bots =D). See examples below how to use this in compare to reviewer model. Default: @false@.
+* @:scale@/@:range@/@:values@ - range, or array, of valid rating values. Default: @1..5@. Note: Negative values are allowed too, and a range of values are not required, i.e. [-1, 1] is valid as well as [1,3,5]. =)
+* @:total_precision@ - maximum number of digits for the average rating value. Default: @1@.
+* @:accept_ip@ - accept anonymous users uniquely identified by IP (well...you handle the bots =D). See examples below how to use this in compare to reviewer model. Default: @false@.
 
 h2. Finders
 
@@ -116,11 +120,11 @@ Order:
 Filter:
 
 * @limit(<number_of_items>)@ - pick maximum @<number_of_items>@ reviews.
-* @recent(<datetime_or_size>)@ - pick reviews created since @<by_earliest_datetime>@.
+* @recent(<datetime_or_size>)@ - if DateTime: pick reviews created since @<datetime_or_size>@, else if Fixnum: pick last @<datetime_or_size>@ number of reviews.
 * @between_dates(<from_date>, to_date)@ - pick reviews created between two datetimes.
 * @with_rating(<rating_value_or_range>)@ - pick reviews with(in) rating value (or range) @<rating_value_or_range>@.
 * @with_a_rating@ - pick reviews with a rating value, i.e. not nil.
-* @with_comment@ - pick reviews with comments, i.e. not nile.
+* @with_comment@ - pick reviews with comments, i.e. not nil.
 * @complete@ - pick reviews with both rating and comments, i.e. "full reviews" where.
 * @of_reviewable_type(<reviewable_type>)@ - pich reviews of @<reviewable_type>@ type of reviewable models.
 * @by_reviewer_type(<reviewer_type>)@ - pich reviews of @<reviewer_type>@ type of reviewer models.
@@ -215,8 +219,8 @@ h2. TODO
 * Make @review!@ accept any additional attributes to update except for the ones used by IsReviewable, i.e. ~100% customizable review attributes.
 * Make the named scopes tests to pass - WTF, ActAsFu-issue? =S
 * More thorough tests (solve above first)
-* Make 
 * Reviewable on multiple contexts, e.g. @is_reviewable :on => [:acting, :writing, ...]@. Alias method @is_reviewable_on@.
+* Allow multiple reviewer models be specified, i.e. is_reviewable :by => [:customers, :suppliers]
 
 h2. License
 
