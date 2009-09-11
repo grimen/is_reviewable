@@ -6,9 +6,9 @@ require 'rake/rdoctask'
 
 NAME = "is_reviewable"
 SUMMARY = %Q{Rails: Make an ActiveRecord resource ratable/reviewable (rate + text), without the usual extra code-smell.}
-HOMEPAGE = "http://github.com/grimen/#{NAME}/tree/master"
-AUTHOR = "grimen@gmail.com"
-EMAIL = "Jonas Grimfelt"
+HOMEPAGE = "http://github.com/grimen/#{NAME}"
+AUTHOR = "Jonas Grimfelt"
+EMAIL = "grimen@gmail.com"
 SUPPORT_FILES = %w(README.textile)
 
 begin
@@ -31,7 +31,7 @@ rescue LoadError
   puts "Jeweler, or one of its dependencies, is not available. Install it with: sudo gem install technicalpickles-jeweler -s http://gems.github.com"
 end
 
-desc %Q{Run unit tests for "#{NAME}".}
+desc %Q{Default: Run unit tests for "#{NAME}".}
 task :default => :test
 
 desc %Q{Run unit tests for "#{NAME}".}
