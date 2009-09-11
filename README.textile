@@ -212,15 +212,15 @@ h2. Notes
 
 * Tested with Ruby 1.9.1.
 * Let me know if you find any bugs; not used in production yet so consider this a concept version.
-* Make alias helpers to implement functionality like VoteFu (http://github.com/peteonrails/vote_fu), simply just aliasing methods with existing ones with hardcoded parameters. Not required because this is supported already, it's all about semantics and sassy code.
 
 h2. TODO
 
 * Make @review!@ accept any additional attributes to update except for the ones used by IsReviewable, i.e. ~100% customizable review attributes.
 * Make the named scopes tests to pass - WTF, ActAsFu-issue? =S
 * More thorough tests (solve above first)
-* Reviewable on multiple contexts, e.g. @is_reviewable :on => [:acting, :writing, ...]@. Alias method @is_reviewable_on@.
 * Allow multiple reviewer models be specified, i.e. is_reviewable :by => [:customers, :suppliers]
+* Reviewable on multiple contexts, e.g. @is_reviewable :on => [:acting, :writing, ...]@. Alias method @is_reviewable_on@.
+* Make alias helpers to implement functionality like VoteFu (http://github.com/peteonrails/vote_fu), simply just aliasing methods with existing ones with hardcoded parameters. Not required because this is supported already, it's all about semantics and sassy code.
 
 h2. License
 
