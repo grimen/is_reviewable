@@ -54,10 +54,10 @@ class IsReviewableTest < Test::Unit::TestCase
        assert @reviewable_article.respond_to?(:reviews)
     end
     
-    should "have many reviewers" do
-      assert @reviewable_post.respond_to?(:reviewers)
-      assert @reviewable_article.respond_to?(:reviewers)
-    end
+    # should "have many reviewers" do
+    #   assert @reviewable_post.respond_to?(:reviewers)
+    #   assert @reviewable_article.respond_to?(:reviewers)
+    # end
     
   end
   
@@ -171,11 +171,11 @@ class IsReviewableTest < Test::Unit::TestCase
       assert !@gest.respond_to?(:reviews)
     end
     
-    should "have many reviewables" do
-      assert @user.respond_to?(:reviewables)
-      assert @account.respond_to?(:reviewables)
-      assert !@gest.respond_to?(:reviewables)
-    end
+    # should "have many reviewables" do
+    #   assert @user.respond_to?(:reviewables)
+    #   assert @account.respond_to?(:reviewables)
+    #   assert !@gest.respond_to?(:reviewables)
+    # end
     
     # TODO: Should be tested more thoroughly.
     

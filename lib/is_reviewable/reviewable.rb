@@ -92,7 +92,9 @@ module IsReviewable
           if ::Object.const_defined?(reviewer_class.name.to_sym)
             reviewer_class.class_eval do
               has_many :reviews, :as => :reviewer, :dependent => :delete_all
-              has_many :reviewables, :through => :review
+              # FIXME: has_many :through relationships through polymorphic relationships not supported by ActiveRecord.
+              # Possible solutions: Use gem "has_many_polymorphs", or using proxy objects with gem "roxy".
+              #has_many :reviewables, :through => :reviews
             end
           end
         end
@@ -100,8 +102,10 @@ module IsReviewable
         # Assocations: Reviewable class (self) (e.g. Page).
         self.class_eval do
           has_many :reviews, :as => :reviewable, :dependent => :delete_all
-          has_many :reviewers, :through => :review
-            
+          # FIXME: has_many :through relationships through polymorphic relationships not supported by ActiveRecord.
+          # Possible solutions: Use gem "has_many_polymorphs", or using proxy objects with gem "roxy".
+          # has_many :reviewers, :through => :reviews
+          
           before_create :init_reviewable_caching_fields
           
           include ::IsReviewable::Reviewable::InstanceMethods
@@ -396,8 +400,7 @@ module IsReviewable
       # * users that reviewed this, also reviewed [...]
       
       # named_scope :reviews_by_reviewers_of_this, :conditions => lambda { rs = self.reviewers; {} }
-      # named_scope :reviews_by_reviewer_type
-      
+      # named_scope :reviews_by_reviewers_of_this, :conditions => lambda { rs = self.reviewers; {} }
     end
     
   end
