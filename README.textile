@@ -279,7 +279,6 @@ h2. TODO
 
 Priority:
 
-* ISSUE: If ::Review is not in the project, ::Review will not be defined - only ::IsReviewable::Review.
 * Write some usage examples in this README. =)
 * Finalize the Reviewable-finders.
 * More thorough tests, especially for named scopes which is a bit tricky.

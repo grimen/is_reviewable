@@ -1,9 +1,15 @@
 # coding: utf-8
 
+unless defined?(::Review)
+  class Review < ::IsReviewable::Review
+  end
+end
+
 module IsReviewable
   module Reviewable
     
     REVIEW_CLASS_NAME = 'Review'
+    REVIEW_CLASS      = ::Review
     DEFAULT_SCALE     = 1..5
     DEFAULT_ACCEPT_IP = false
     CACHABLE_FIELDS   = [
@@ -68,16 +74,7 @@ module IsReviewable
         raise InvalidConfigValueError, ":total_precision must be an integer." unless options[:total_precision].is_a?(::Fixnum)
         
         # Assocations: Review class (e.g. Review).
-        begin
-          options[:review_class] = REVIEW_CLASS_NAME.constantize
-        rescue
-          # If not defined...define it!
-          ::Object.const_set(REVIEW_CLASS_NAME.to_sym, ::Class.new(::IsReviewable::Review))
-          #eval <<-END_RUBY
-          #  ::#{REVIEW_CLASS_NAME} = ::Class.new(::IsReviewable::Review)
-          #END_RUBY
-          options[:review_class] = REVIEW_CLASS_NAME.constantize
-        end
+        options[:review_class] = REVIEW_CLASS
         
         # Reviewer class(es).
         options[:by] = [options[:by]] unless options[:by].is_a?(::Array)
@@ -196,7 +193,7 @@ module IsReviewable
         else
           conditions = self.reviewable_conditions(true)
           conditions[0] << ' AND rating IS NOT NULL'
-          self.is_reviewable_options[:review_class].average(:rating,
+          ::Review.average(:rating,
             :conditions => conditions).to_f.round(self.is_reviewable_options[:total_precision])
         end
       end
@@ -205,7 +202,7 @@ module IsReviewable
       #
       def average_rating_by(identifiers)
         # FIXME: Only count non-nil ratings, i.e. See "average_rating".
-        self.is_reviewable_options[:review_class].average(:rating,
+        ::Review.average(:rating,
             :conditions => self.reviewer_conditions(identifiers).merge(self.reviewable_conditions)
           ).to_f.round(self.is_reviewable_options[:total_precision])
       end
@@ -216,7 +213,7 @@ module IsReviewable
         if !recalculate && self.reviewable_caching_fields?(:total_reviews)
           self.total_reviews
         else
-          self.is_reviewable_options[:review_class].count(:conditions => self.reviewable_conditions)
+          ::Review.count(:conditions => self.reviewable_conditions)
         end
       end
       alias :number_of_reviews :total_reviews
@@ -269,7 +266,7 @@ module IsReviewable
           
           unless review.present?
             # An un-existing reviewer of this reviewable object => Create a new review.
-            review = self.is_reviewable_options[:review_class].new do |r|
+            review = ::Review.new do |r|
               r.reviewable_id   = self.id
               r.reviewable_type = self.class.name
               
