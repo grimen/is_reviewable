@@ -35,6 +35,8 @@ module IsReviewable
     
     module ClassMethods
       
+      # TODO: Document this method...thoroughly.
+      #
       # Examples:
       #
       #   is_reviewable :by => :user, :scale => 0..5, :total_precision => 2
@@ -62,8 +64,8 @@ module IsReviewable
         else
           options[:scale] = scale.to_a.collect! { |v| v.to_f }
         end
-        raise IsReviewableError, ":scale/:range/:values must consist of numeric values only." unless options[:scale].all? { |v| v.is_a?(Numeric) }
-        raise IsReviewableError, ":total_precision must be an integer." unless options[:total_precision].is_a?(Fixnum)
+        raise InvalidConfigValueError, ":scale/:range/:values must consist of numeric values only." unless options[:scale].all? { |v| v.is_a?(Numeric) }
+        raise InvalidConfigValueError, ":total_precision must be an integer." unless options[:total_precision].is_a?(Fixnum)
         
         # Set default class names if not given.
         options[:reviewable_class_name] = self.class.name
@@ -72,7 +74,7 @@ module IsReviewable
         begin
           options[:reviewer_class] = options[:reviewer_class_name].constantize
         rescue
-          raise IsReviewableError, "Reviewer class #{options[:reviewer_class_name]} not defined, needs to be defined."
+          raise InvalidReviewerError, "Reviewer class #{options[:reviewer_class_name]} not defined, needs to be defined."
         end
         
         # Assocations: Review class (e.g. Review).
@@ -138,14 +140,14 @@ module IsReviewable
         # Check if the requested reviewer object is a valid reviewer.
         #
         def validate_reviewer(identifiers)
-          raise IsReviewableError, "Argument can't be nil: no reviewer object or IP provided." if identifiers.blank?
+          raise InvalidReviewerError, "Argument can't be nil: no reviewer object or IP provided." if identifiers.blank?
           reviewer = identifiers[:reviewer] || identifiers[:user] || identifiers[:account] || identifiers[:ip]
           is_ip = Support.is_ip?(reviewer)
           reviewer = reviewer.to_s.strip if is_ip
           unless Support.is_active_record?(reviewer) || is_ip
-            raise IsReviewableError, "Reviewer is of wrong type: #{reviewer.inspect}."
+            raise InvalidReviewerError, "Reviewer is of wrong type: #{reviewer.inspect}."
           end
-          raise IsReviewableError, "Reviewing based on IP is disabled." if is_ip && !self.is_reviewable_options[:accept_ip]
+          raise InvalidReviewerError, "Reviewing based on IP is disabled." if is_ip && !self.is_reviewable_options[:accept_ip]
           reviewer
         end
         
@@ -256,7 +258,7 @@ module IsReviewable
           
           if review_values[:rating].present? && !self.valid_rating_value?(review_values[:rating])
             ::IsReviewable.log "Invalid rating value: #{review_values[:rating]} not in [#{self.rating_scale.join(', ')}].", :warn
-            raise IsReviewableError, "Invalid rating value: #{review_values[:rating]} not in [#{self.rating_scale.join(', ')}]."
+            raise InvalidReviewValueError, "Invalid rating value: #{review_values[:rating]} not in [#{self.rating_scale.join(', ')}]."
           end
           
           unless review.present?
@@ -296,9 +298,11 @@ module IsReviewable
           
           review.save && self.save_without_validation
           review
+        rescue InvalidReviewerError, InvalidReviewValueError => e
+          raise e
         rescue Exception => e
           ::IsReviewable.log "Could not create/update review #{review.inspect} by #{reviewer.inspect}: #{e}", :warn
-          raise ::IsReviewable::IsReviewableError, "Could not create/update review #{review.inspect} by #{reviewer.inspect}: #{e}"
+          raise RecordError, "Could not create/update review #{review.inspect} by #{reviewer.inspect}: #{e}"
         end
       end
       
@@ -325,7 +329,7 @@ module IsReviewable
           self.save_without_validation
         else
           ::IsReviewable.log "Could not save review #{review.inspect} by #{reviewer.inspect}: #{e}", :warn
-          raise IsReviewableError, "Could not un-review #{review.inspect} by #{reviewer.inspect}: #{e}"
+          raise RecordError, "Could not un-review #{review.inspect} by #{reviewer.inspect}: #{e}"
         end
       end
       

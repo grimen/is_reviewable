@@ -8,7 +8,10 @@ module IsReviewable
   
   extend self
   
-  IsReviewableError = ::Class.new(::StandardError)
+  InvalidConfigValueError = ::Class.new(::StandardError)
+  InvalidReviewerError = ::Class.new(::StandardError)
+  InvalidReviewValueError = ::Class.new(::StandardError)
+  RecordError = ::Class.new(::StandardError)
   
   @logger = ::Logger.new(STDOUT)
   

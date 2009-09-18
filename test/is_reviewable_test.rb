@@ -84,7 +84,7 @@ class IsReviewableTest < Test::Unit::TestCase
     end
     
     should "not accept any reviews on IP if disabled" do
-      assert_raise ::IsReviewable::IsReviewableError do
+      assert_raise ::IsReviewable::InvalidReviewerError do
         @reviewable_article.review!(:reviewer => '128.0.0.0', :rating => 1)
       end
     end
@@ -132,7 +132,7 @@ class IsReviewableTest < Test::Unit::TestCase
     end
     
     should "not accept ratings out of rating scale range" do
-      assert_raise ::IsReviewable::IsReviewableError do
+      assert_raise ::IsReviewable::InvalidReviewValueError do
         @reviewable_post.review!(:reviewer => @user_1, :rating => 6)
       end
     end
