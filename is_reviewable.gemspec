@@ -8,10 +8,10 @@ Gem::Specification.new do |s|
   s.version = "0.1.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["grimen@gmail.com"]
-  s.date = %q{2009-09-07}
+  s.authors = ["Jonas Grimfelt"]
+  s.date = %q{2009-09-18}
   s.description = %q{Rails: Make an ActiveRecord resource ratable/reviewable (rate + text), without the usual extra code-smell.}
-  s.email = %q{Jonas Grimfelt}
+  s.email = %q{grimen@gmail.com}
   s.extra_rdoc_files = [
     "MIT-LICENSE",
      "README.textile",
@@ -42,7 +42,7 @@ Gem::Specification.new do |s|
      "test/is_reviewable_test.rb",
      "test/test_helper.rb"
   ]
-  s.homepage = %q{http://github.com/grimen/is_reviewable/tree/master}
+  s.homepage = %q{http://github.com/grimen/is_reviewable}
   s.rdoc_options = ["--charset=UTF-8"]
   s.require_paths = ["lib"]
   s.rubygems_version = %q{1.3.3}

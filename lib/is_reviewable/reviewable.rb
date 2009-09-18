@@ -72,7 +72,7 @@ module IsReviewable
           options[:review_class] = REVIEW_CLASS_NAME.constantize
         rescue
           # If not defined...define it!
-          ::Object.const_set(REVIEW_CLASS_NAME, ::Class.new(::IsReviewable::Review))
+          ::Object.const_set(REVIEW_CLASS_NAME.to_sym, ::Class.new(::IsReviewable::Review))
           options[:review_class] = REVIEW_CLASS_NAME.constantize
         end
         

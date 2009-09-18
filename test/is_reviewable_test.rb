@@ -183,12 +183,16 @@ class IsReviewableTest < Test::Unit::TestCase
   
   context "review" do
     
-    # TODO: Test named scopes á la: http://blog.confabulus.com/2008/11/24/testing-named-scopes, or similar.
+    # TODO: Test named scopes á la:
+    #   * http://www.simonecarletti.com/blog/2009/06/how-to-test-rails-activerecord-named-scopes/
+    #   * http://blog.confabulus.com/2008/11/24/testing-named-scopes, or similar.
     
     should "define named scopes" do
       named_scopes = [
           :between_dates
         ]
+      
+      # Example: Review.complete.proxy_options # => :conditions=>["rating IS NOT NULL AND body IS NOT NULL AND LENGTH(body) > 0"]}
       
       # Old: This won't work...
       #assert named_scopes.all? { |named_scope| Review.respond_to?(named_scope, true) }
