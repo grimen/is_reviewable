@@ -9,8 +9,14 @@ class IsReviewableMigration < ActiveRecord::Migration
       t.string      :ip,            :limit => 24
       
       t.float       :rating
-      t.string      :title          # optional
-      t.text        :body           # optional
+      t.text        :body
+      
+      #
+      # Custom fields goes here...
+      # 
+      # t.string      :title
+      # ...
+      #
       
       t.timestamps
     end

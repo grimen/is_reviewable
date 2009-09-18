@@ -10,7 +10,7 @@ module IsReviewable
   
   IsReviewableError = ::Class.new(::StandardError)
   
-  @logger = Logger.new(STDOUT)
+  @logger = ::Logger.new(STDOUT)
   
   def log(message, level = :info)
     level = :info if level.blank?

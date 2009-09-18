@@ -50,8 +50,14 @@ class IsReviewableMigration < ActiveRecord::Migration
       t.string      :ip,            :limit => 24
       
       t.float       :rating
-      t.string      :title          # optional
-      t.text        :body           # optional
+      t.text        :body
+      
+      #
+      # Custom fields goes here...
+      # 
+      # t.string      :title
+      # ...
+      #
       
       t.timestamps
     end
@@ -89,7 +95,7 @@ end
 
 3. ...and here we go:
 
-Usage examples:
+Examples:
 
 <pre>
 TODO: Give some usage examples here
@@ -131,7 +137,11 @@ Filter:
 * @on(<reviewable_object>)@ - reviews on the reviewable object @<reviewable_object>@ .
 * @by(<reviewer_object>)@ - reviews by the @<reviewer_object>@ type of reviewer models.
 
-Usage examples:
+h3. @Reviewable@
+
+...
+
+Examples using finders:
 
 <pre>
 TODO: Give some usage examples here
@@ -181,7 +191,58 @@ class AddIsReviewableToPostsMigration < ActiveRecord::Migration
 end
 </pre>
 
-h2. Additional Use Cases
+h2. Example
+
+h3. Controller
+
+Depending on your implementation: You might - or might not - need a Controller, but for most cases where you only want to allow rating of something, a controller most probably is overkill. In the case of a review, this is how one cold look like:
+
+Using the excellent "InheritedResources":http://github.com/josevalim/inherited_resources - @app/controllers/reviews_controller.rb@:
+
+<pre>
+class ReviewsController < InheritedResources::Base
+  
+  actions :create, :update, :destroy
+  respond_to :js
+  layout false
+  
+end
+</pre>
+
+..or in the more basic rating case - @app/controllers/posts_controller.rb@:
+
+<pre>
+class PostsController < InheritedResources::Base
+  
+  actions :all
+  respond_to :html, :js
+  
+  def rate
+    begin
+      @post.review! :reviewer => current_user, params.slice(:rating, :body)
+    rescue
+      flash[:error] = 'Sad panda...could not rate for some reason. O_o'
+    end
+    respond_to do |format|
+      format.html { redirect_to @post }
+      format.js   # app/views/posts/rate.js.rjs
+    end
+  end
+  
+end
+</pre>
+
+h3. Views
+
+IsReviewable comes with no view templates (etc.) because of already stated reasons, but basic rating mechanism is trivial to implement:
+
+<pre>
+TODO...
+</pre>
+
+h2. Design Implications: Additional Use Cases
+
+h3. Like/Dislike
 
 IsReviewable is designed in such way that you as a developer are not locked to how traditional rating works. As an example, this is how you could implement like/dislike (like VoteFu) pattern using IsReviewable:
 
@@ -215,10 +276,11 @@ h2. Notes
 
 h2. TODO
 
-* Make @review!@ accept any additional attributes to update except for the ones used by IsReviewable, i.e. ~100% customizable review attributes.
+* Write some usage examples in this README. =)
+* Allow multiple reviewer models be specified, i.e. is_reviewable :by => [:customers, :suppliers]
+* Finalize those damn Reviewable-finders.
 * Make the named scopes tests to pass - WTF, ActAsFu-issue? =S
 * More thorough tests (solve above first)
-* Allow multiple reviewer models be specified, i.e. is_reviewable :by => [:customers, :suppliers]
 * Reviewable on multiple contexts, e.g. @is_reviewable :on => [:acting, :writing, ...]@. Alias method @is_reviewable_on@.
 * Make alias helpers to implement functionality like VoteFu (http://github.com/peteonrails/vote_fu), simply just aliasing methods with existing ones with hardcoded parameters. Not required because this is supported already, it's all about semantics and sassy code.
 

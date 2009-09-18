@@ -3,11 +3,25 @@
 module IsReviewable
   module Reviewable
     
-    REVIEW_CLASS_NAME         = 'Review'
-    DEFAULT_SCALE             = 1..5
-    DEFAULT_ACCEPT_IP         = false
-    CACHABLE_FIELDS           = [:reviews_count, :average_rating]
-    
+    REVIEW_CLASS_NAME = 'Review'
+    DEFAULT_SCALE     = 1..5
+    DEFAULT_ACCEPT_IP = false
+    CACHABLE_FIELDS   = [
+        :reviews_count,
+        :average_rating
+      ].freeze
+    ASSOCIATION_FIELDS = [
+        :reviewable_id,
+        :reviewable_type,
+        :reviewer_id,
+        :reviewer_type,
+        :ip
+      ].freeze
+    CONTENT_FIELDS = [
+        :rating,
+        :body
+      ].freeze
+      
     def self.included(base) #:nodoc:
       base.class_eval do
         extend ClassMethods
@@ -225,16 +239,19 @@ module IsReviewable
       
       # View the object with and identifier (user or ip) - create new if new reviewer.
       #
-      # === identifiers hash:
-      # * <tt>:ip</tt> - identify with IP
-      # * <tt>:reviewer/:user/:account</tt> - identify with a reviewer-model (e.g. User, ...)
+      # === identifiers_and_options hash:
+      # * <tt>:reviewer/:user/:account</tt> - identify with a reviewer-model or IP (e.g. User, Account, ..., "128.0.0.1")
+      # * <tt>:rating</tt> - Review rating value, e.g. 3.5, "3.5", ... (optional)
+      # * <tt>:body</tt> - Review text body, e.g. "Lorem *ipsum*..." (optional)
+      # * <tt>:*</tt> - Any custom review field, e.g. :reviewer_mood => "angry" (optional)
       #
       def review!(identifiers_and_options)
         begin
           reviewer = self.validate_reviewer(identifiers_and_options)
           review = self.review_by(identifiers_and_options)
           
-          review_values = identifiers_and_options.slice(:rating, :body, :title)
+          # Except for the reserved fields, any Review-fields should be be able to update.
+          review_values = identifiers_and_options.except(*ASSOCIATION_FIELDS)
           review_values[:rating] = review_values[:rating].to_f if review_values[:rating].present?
           
           if review_values[:rating].present? && !self.valid_rating_value?(review_values[:rating])
@@ -242,17 +259,9 @@ module IsReviewable
             raise IsReviewableError, "Invalid rating value: #{review_values[:rating]} not in [#{self.rating_scale.join(', ')}]."
           end
           
-          if review.present?
-            # Previous reviewer => Update existing review.
-            review.rating = review_values[:rating]
-            review.body   = review_values[:body]
-            review.title  = review_values[:title] if self.attributes.key?(:title)
-          else
-            # New reviewer => New review.
+          unless review.present?
+            # An un-existing reviewer of this reviewable object => Create a new review.
             review = self.is_reviewable_options[:review_class].new do |r|
-              # FIXME: Don't work...why? =S
-              # r.reviewer = reviewer
-              # r.reviewable = self
               r.reviewable_id   = self.id
               r.reviewable_type = self.class.name
               
@@ -260,14 +269,16 @@ module IsReviewable
                 r.reviewer_id   = reviewer.id
                 r.reviewer_type = reviewer.class.name
               else
-                r.ip            = reviewer
+                r.ip = reviewer
               end
-              r.rating          = review_values[:rating]
-              r.body            = review_values[:body]
-              r.title           = review_values[:title] if self.attributes.key?(:title)
             end
             self.reviews << review
+          else
+            # An existing reviewer of this reviewable object => Update the existing review.
           end
+          
+          # Update non-association attributes, such as rating, body (the review text), and any custom fields.
+          review.attributes = review_values.slice(*review.attribute_names.collect { |an| an.to_sym })
           
           if self.reviewable_caching_fields?(:total_reviews)
             begin
@@ -284,6 +295,7 @@ module IsReviewable
           end
           
           review.save && self.save_without_validation
+          review
         rescue Exception => e
           ::IsReviewable.log "Could not create/update review #{review.inspect} by #{reviewer.inspect}: #{e}", :warn
           raise ::IsReviewable::IsReviewableError, "Could not create/update review #{review.inspect} by #{reviewer.inspect}: #{e}"
