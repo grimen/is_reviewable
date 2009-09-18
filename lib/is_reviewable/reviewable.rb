@@ -73,6 +73,9 @@ module IsReviewable
         rescue
           # If not defined...define it!
           ::Object.const_set(REVIEW_CLASS_NAME.to_sym, ::Class.new(::IsReviewable::Review))
+          #eval <<-END_RUBY
+          #  ::#{REVIEW_CLASS_NAME} = ::Class.new(::IsReviewable::Review)
+          #END_RUBY
           options[:review_class] = REVIEW_CLASS_NAME.constantize
         end
         

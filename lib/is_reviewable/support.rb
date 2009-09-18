@@ -9,7 +9,7 @@ module IsReviewable
       match = [:id, :type] if match.blank?
       # Note: {} is equivalent to Hash.new which takes a block, so we must do: ({}) or (Hash.new)
       returning({}) do |conditions|
-        conditions.merge!(:"#{field}_id" => object_or_type.id) if object_or_type.is_a?(::ActiveRecord::Base && match.include?(:id)
+        conditions.merge!(:"#{field}_id" => object_or_type.id) if object_or_type.is_a?(::ActiveRecord::Base) && match.include?(:id)
         
         if match.include?(:type)
           type = case object_or_type
@@ -20,6 +20,7 @@ module IsReviewable
           else # Object - or raise NameError as usual
             object_or_type.class.name
           end
+          
           conditions.merge!(:"#{field}_type" => type)
         end
       end
