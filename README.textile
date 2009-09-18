@@ -140,23 +140,34 @@ Filter:
 
 h3. @Reviewable@
 
-...
+Filter:
+
+TODO: Documentation on named scopes for reviewable
 
 Examples using finders:
 
 <pre>
-TODO: Give some usage examples here
-
 @user = User.first
 @post = Post.first
 
-@user.reviews.on(@post) # => [all reviews by @user on @post]
-@post.reviews.by(@user) # => [all reviews by @user on @post] (equivalent with above)
+@post.reviews.recent(10)  # => [10 most recent reviews]
+@post.reviews.recent(1.week.ago)  # => [reviews created since 1 week ago]
 
-Review.on(@post) # => [all reviews on @user] <=> @post.reviews
-Review.by(@user) # => [all reviews by @user] <=> @user.reviews
+@post.reviews.with_rating(3.5..4.0)  # => [all reviews on @post with rating between 3.5 and 4.0]
 
-...
+@post.reviews.by_reviewer_type(:user)  # => [all reviews on @post by User-objects]
+# ...or:
+@post.reviews.by_reviewer_type(:users)  # => [all reviews on @post by User-objects]
+# ...or:
+@post.reviews.by_reviewer_type(User)  # => [all reviews on @post by User-objects]
+
+@user.reviews.on(@post)  # => [all reviews by @user on @post]
+@post.reviews.by(@user)  # => [all reviews by @user on @post] (equivalent with above)
+
+Review.on(@post)  # => [all reviews on @user] <=> @post.reviews
+Review.by(@user)  # => [all reviews by @user] <=> @user.reviews
+
+# etc, etc. It's all named scopes, so it's really no new hokus-pokus you have to learn.
 </pre>
 
 h2. Extend the Review model
@@ -233,12 +244,41 @@ class PostsController < InheritedResources::Base
 end
 </pre>
 
+h3. Routes
+
+@config/routes.rs@
+<pre>
+map.resources :posts, :member => {:rate => :put}
+</pre>
+
 h3. Views
 
-IsReviewable comes with no view templates (etc.) because of already stated reasons, but basic rating mechanism is trivial to implement:
+IsReviewable comes with no view templates (etc.) because of already stated reasons, but basic rating mechanism is trivial to implement (in this example, I'm using HAML because I despise ERB):
 
+Example: @app/views/posts/show.html.haml@
 <pre>
-TODO...
+%h1
+  = @post.title
+%p
+  = @post.body
+%p
+  = "Your rating:"
+  = render '/reviews/rating', :resource => @post
+</pre>
+
+Example: @app/views/reviews/_rating.html.haml@
+<pre>
+.rating
+  - if resource.present? && resource.reviewable?
+    - if current_user.present?
+      - current_rating = resource.review_by(current_user).try(:rating)
+      - resource.reviewable_scale.each do |rating|
+        = link_to_remote "#{rating.to_i}", :url => rate_post_path(resource, :rating => rating.to_i), :method => :put, :html => {:class => "rate rated_#{rating.to_i}#{' current' if current_rating == rating}"}
+      = link_to_remote "no opinion", :url => rate_post_path(resource, :rating => nil), :method => :put, :html => {:class => "rate rated_none#{' current' unless current_rating}"}
+    - else # static rating
+      - current_rating = resource.average_rating.round
+      - resource.reviewable_scale.each do |rating|
+        {:class => "rate rated_#{rating}#{' current' if current_rating == rating}"}
 </pre>
 
 h2. Design Implications: Additional Use Cases
@@ -290,4 +330,4 @@ Maybe:
 
 h2. License
 
-Copyright (c) 2009 Jonas Grimfelt, released under the MIT-license.
+Copyright (c) 2009 Jonas Grimfelt, released under the MIT-licen
