@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = %q{is_reviewable}
-  s.version = "0.1.0"
+  s.version = "0.1.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jonas Grimfelt"]
@@ -17,7 +17,9 @@ Gem::Specification.new do |s|
      "README.textile",
      "Rakefile",
      "generators/is_reviewable_migration/is_reviewable_migration_generator.rb",
-     "generators/is_reviewable_migration/templates/migration.rb",
+     "generators/is_reviewable_migration/templates/reviews_migration.rb",
+     "generators/is_reviewable_model/is_reviewable_model_generator.rb",
+     "generators/is_reviewable_model/templates/review_model.rb",
      "lib/is_reviewable.rb",
      "lib/is_reviewable/review.rb",
      "lib/is_reviewable/reviewable.rb",
@@ -32,7 +34,9 @@ Gem::Specification.new do |s|
      "README.textile",
      "Rakefile",
      "generators/is_reviewable_migration/is_reviewable_migration_generator.rb",
-     "generators/is_reviewable_migration/templates/migration.rb",
+     "generators/is_reviewable_migration/templates/reviews_migration.rb",
+     "generators/is_reviewable_model/is_reviewable_model_generator.rb",
+     "generators/is_reviewable_model/templates/review_model.rb",
      "lib/is_reviewable.rb",
      "lib/is_reviewable/review.rb",
      "lib/is_reviewable/reviewable.rb",
