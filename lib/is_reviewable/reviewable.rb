@@ -58,14 +58,14 @@ module IsReviewable
         
         # Check for incorrect input values, and handle ranges of floats with help of :step. E.g. :scale => 1.0..5.0.
         
-        if scale.is_a?(Range) && scale.first.is_a?(Float)
+        if scale.is_a?(::Range) && scale.first.is_a?(::Float)
           options[:step] = (scale.last - scale.first) / (options[:steps] - 1) if options[:step].blank?
           options[:scale] = scale.first.step(scale.last, options[:step]).collect { |value| value }
         else
           options[:scale] = scale.to_a.collect! { |v| v.to_f }
         end
-        raise InvalidConfigValueError, ":scale/:range/:values must consist of numeric values only." unless options[:scale].all? { |v| v.is_a?(Numeric) }
-        raise InvalidConfigValueError, ":total_precision must be an integer." unless options[:total_precision].is_a?(Fixnum)
+        raise InvalidConfigValueError, ":scale/:range/:values must consist of numeric values only." unless options[:scale].all? { |v| v.is_a?(::Numeric) }
+        raise InvalidConfigValueError, ":total_precision must be an integer." unless options[:total_precision].is_a?(::Fixnum)
         
         # Set default class names if not given.
         options[:reviewable_class_name] = self.class.name
