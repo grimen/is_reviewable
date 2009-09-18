@@ -396,11 +396,11 @@ module IsReviewable
     
     module Finders
       
+      # When the has-many-through-polymoprhic issue is solved:
+      # 
       # * users that reviewed this with rating X
       # * users that reviewed this, also reviewed [...]
       
-      # named_scope :reviews_by_reviewers_of_this, :conditions => lambda { rs = self.reviewers; {} }
-      # named_scope :reviews_by_reviewers_of_this, :conditions => lambda { rs = self.reviewers; {} }
     end
     
   end
