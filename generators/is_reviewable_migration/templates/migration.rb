@@ -15,6 +15,7 @@ class IsReviewableMigration < ActiveRecord::Migration
       # Custom fields goes here...
       # 
       # t.string      :title
+      # t.string      :mood
       # ...
       #
       

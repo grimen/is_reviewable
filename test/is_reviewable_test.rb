@@ -5,9 +5,11 @@ class IsReviewableTest < Test::Unit::TestCase
   
   def setup
     @review = ::Review.new
-    @user_1 = ::User.create
+    @user = ::User.create
     @user_2 = ::User.create
     @user_3 = ::User.create
+    @guest = ::Guest.create
+    @account = ::Account.create
     @regular_post = ::Post.create
     @reviewable_post = ::ReviewablePost.create
     @reviewable_article = ::ReviewableArticle.create
@@ -41,18 +43,20 @@ class IsReviewableTest < Test::Unit::TestCase
       assert !public_instance_methods.all? { |m| @regular_post.respond_to?(m) }
     end
     
-    # Don't work for some reason... =S
     should "be enabled only for specified models" do
       assert @reviewable_post.reviewable?
+      assert @reviewable_article.reviewable?
       assert !@regular_post.reviewable?
     end
     
     should "have many reviews" do
        assert @reviewable_post.respond_to?(:reviews)
+       assert @reviewable_article.respond_to?(:reviews)
     end
     
     should "have many reviewers" do
       assert @reviewable_post.respond_to?(:reviewers)
+      assert @reviewable_article.respond_to?(:reviewers)
     end
     
   end
@@ -90,7 +94,7 @@ class IsReviewableTest < Test::Unit::TestCase
     end
     
     should "count reviews based on reviewer object (user/account) correctly" do
-      @reviewable_post.review!(:reviewer => @user_1, :rating => 1)
+      @reviewable_post.review!(:reviewer => @user, :rating => 1)
       @reviewable_post.review!(:reviewer => @user_2, :rating => 2.5)
       
       assert_equal 2, @reviewable_post.total_reviews
@@ -111,7 +115,7 @@ class IsReviewableTest < Test::Unit::TestCase
     end
     
     should "count reviews based on both IP and reviewer object (user/account) correctly" do
-      @reviewable_post.review!(:reviewer => @user_1, :rating => 1)
+      @reviewable_post.review!(:reviewer => @user, :rating => 1)
       @reviewable_post.review!(:reviewer => '128.0.0.2', :rating => 2.5)
       
       assert_equal 2, @reviewable_post.total_reviews
@@ -125,7 +129,7 @@ class IsReviewableTest < Test::Unit::TestCase
     end
     
     should "not count NULL-ratings, e.g. reviews skipping rating value" do
-      @reviewable_post.review!(:reviewer => @user_1, :rating => nil)
+      @reviewable_post.review!(:reviewer => @user, :rating => nil)
       
       assert_equal 1, @reviewable_post.total_reviews
       assert_equal 0.0, @reviewable_post.average_rating
@@ -133,7 +137,7 @@ class IsReviewableTest < Test::Unit::TestCase
     
     should "not accept ratings out of rating scale range" do
       assert_raise ::IsReviewable::InvalidReviewValueError do
-        @reviewable_post.review!(:reviewer => @user_1, :rating => 6)
+        @reviewable_post.review!(:reviewer => @user, :rating => 6)
       end
     end
     
@@ -141,7 +145,7 @@ class IsReviewableTest < Test::Unit::TestCase
       review_body = "Lorem ipsum dolor sit amet, consectetur adipisicing elit..."
       
       # just body
-      review_1 = @reviewable_post.review!(:reviewer => @user_1, :body => review_body)
+      review_1 = @reviewable_post.review!(:reviewer => @user, :body => review_body)
       assert_equal(review_body, review_1.body)
       
       # body + rating
@@ -150,7 +154,7 @@ class IsReviewableTest < Test::Unit::TestCase
     end
     
     should "save any additional non-reserved attribute values" do
-      review = @reviewable_post.review!(:reviewer => @user_1, :rating => 4, :title => "My title")
+      review = @reviewable_post.review!(:reviewer => @user, :rating => 4, :title => "My title")
       assert_equal "My title", review.title
       
       # don't allow update of reserved fields
@@ -162,35 +166,41 @@ class IsReviewableTest < Test::Unit::TestCase
   context "reviewer" do
     
     should "have many reviews" do
-       assert @user_1.respond_to?(:reviews)
+      assert @user.respond_to?(:reviews)
+      assert @account.respond_to?(:reviews)
+      assert !@gest.respond_to?(:reviews)
     end
     
     should "have many reviewables" do
-      assert @user_1.respond_to?(:reviewables)
+      assert @user.respond_to?(:reviewables)
+      assert @account.respond_to?(:reviewables)
+      assert !@gest.respond_to?(:reviewables)
     end
     
-    # Nothing
+    # TODO: Should be tested more thoroughly.
     
   end
   
   context "review" do
+    
+    # TODO: Test named scopes á la: http://blog.confabulus.com/2008/11/24/testing-named-scopes, or similar.
     
     should "define named scopes" do
       named_scopes = [
           :between_dates
         ]
       
+      # Old: This won't work...
       #assert named_scopes.all? { |named_scope| Review.respond_to?(named_scope, true) }
-      #assert named_scopes.all? { |named_scope| @reviewable_post.reviews.respond_to?(named_scope) }
+      #assert named_scopes.all? { |named_scope| @reviewable_post.reviews.respond_to?(named_scope, true) }
     end
     
     should "return reviews by creation date with named scope :in_order" do
-      @reviewable_post.review!(:reviewer => @user_1, :rating => 1)
+      @reviewable_post.review!(:reviewer => @user, :rating => 1)
       @reviewable_post.review!(:reviewer => @user_2, :rating => 2)
       
-      puts @reviewable_post.reviews.first.class
-      
-      #assert_equal @user_1, @reviewable_post.reviews.in_order.first.reviewer
+      # Old: This won't work...
+      #assert_equal @user, @reviewable_post.reviews.in_order.first.reviewer
       #assert_equal @user_2, @reviewable_post.reviews.in_order.last.reviewer
     end
     

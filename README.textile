@@ -56,6 +56,7 @@ class IsReviewableMigration < ActiveRecord::Migration
       # Custom fields goes here...
       # 
       # t.string      :title
+      # t.string      :mood
       # ...
       #
       
@@ -82,12 +83,12 @@ class Post < ActiveRecord::Base
 end
 </pre>
 
-or, with explicit reviewer:
+or, with explicit reviewer (or reviewers):
 
 <pre>
 class Book < ActiveRecord::Base
-  # Setup associations for the reviewer class automatically, and specify an explicit scale instead.
-  is_reviewable :by => :user, :values => [1,2,3,4,5]
+  # Setup associations for the reviewer class(es) automatically, and specify an explicit scale instead.
+  is_reviewable :by => [:users, :journalists], :scale => 0..5
 end
 </pre>
 
@@ -276,12 +277,15 @@ h2. Notes
 
 h2. TODO
 
+Priority:
+
 * Write some usage examples in this README. =)
-* Allow multiple reviewer models be specified, i.e. is_reviewable :by => [:customers, :suppliers]
-* Finalize those damn Reviewable-finders.
-* Make the named scopes tests to pass - WTF, ActAsFu-issue? =S
-* More thorough tests (solve above first)
+* Finalize the Reviewable-finders.
+* More thorough tests, especially for named scopes which is a bit tricky.
 * Reviewable on multiple contexts, e.g. @is_reviewable :on => [:acting, :writing, ...]@. Alias method @is_reviewable_on@.
+
+Maybe:
+
 * Make alias helpers to implement functionality like VoteFu (http://github.com/peteonrails/vote_fu), simply just aliasing methods with existing ones with hardcoded parameters. Not required because this is supported already, it's all about semantics and sassy code.
 
 h2. License

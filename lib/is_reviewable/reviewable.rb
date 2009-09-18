@@ -67,16 +67,6 @@ module IsReviewable
         raise InvalidConfigValueError, ":scale/:range/:values must consist of numeric values only." unless options[:scale].all? { |v| v.is_a?(::Numeric) }
         raise InvalidConfigValueError, ":total_precision must be an integer." unless options[:total_precision].is_a?(::Fixnum)
         
-        # Set default class names if not given.
-        options[:reviewable_class_name] = self.class.name
-        options[:reviewer_class_name] = options[:by].to_s.singularize.classify
-        
-        begin
-          options[:reviewer_class] = options[:reviewer_class_name].constantize
-        rescue
-          raise InvalidReviewerError, "Reviewer class #{options[:reviewer_class_name]} not defined, needs to be defined."
-        end
-        
         # Assocations: Review class (e.g. Review).
         begin
           options[:review_class] = REVIEW_CLASS_NAME.constantize
@@ -86,19 +76,28 @@ module IsReviewable
           options[:review_class] = REVIEW_CLASS_NAME.constantize
         end
         
-        # Save the initialized options for this class.
-        write_inheritable_attribute :is_reviewable_options, options
-        class_inheritable_reader :is_reviewable_options
-        
-        # Assocations: Reviewer class (e.g. User).
-        if ::Object.const_defined?(options[:reviewer_class].name.to_sym)
-          options[:reviewer_class].class_eval do
-            has_many :reviews, :as => :reviewer, :dependent => :delete_all
-            has_many :reviewables, :through => :review
+        # Reviewer class(es).
+        options[:by] = [options[:by]] unless options[:by].is_a?(::Array)
+        options[:reviewer_class_names] = options[:by].collect { |class_name| class_name.to_s.singularize.classify }
+        options[:reviewer_classes] = options[:reviewer_class_names].collect do |class_name|
+          begin
+            class_name.constantize
+          rescue NameError => e
+            raise InvalidReviewerError, "Reviewer class #{options[:reviewer_class_name]} not defined, needs to be defined. #{e}"
           end
         end
         
-        # Assocations: Reviewable class (e.g. Page).
+        # Assocations: Reviewer class(es) (e.g. User, Account, ...).
+        options[:reviewer_classes].each do |reviewer_class|
+          if ::Object.const_defined?(reviewer_class.name.to_sym)
+            reviewer_class.class_eval do
+              has_many :reviews, :as => :reviewer, :dependent => :delete_all
+              has_many :reviewables, :through => :review
+            end
+          end
+        end
+        
+        # Assocations: Reviewable class (self) (e.g. Page).
         self.class_eval do
           has_many :reviews, :as => :reviewable, :dependent => :delete_all
           has_many :reviewers, :through => :review
@@ -108,6 +107,10 @@ module IsReviewable
           include ::IsReviewable::Reviewable::InstanceMethods
           extend  ::IsReviewable::Reviewable::Finders
         end
+        
+        # Save the initialized options for this class.
+        write_inheritable_attribute :is_reviewable_options, options
+        class_inheritable_reader :is_reviewable_options
       end
       
       # Checks if this object reviewable or not.

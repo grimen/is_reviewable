@@ -32,6 +32,7 @@ end
 
 build_model :guests
 build_model :users
+build_model :accounts
 build_model :posts
 
 build_model :reviewable_posts do
@@ -39,7 +40,7 @@ build_model :reviewable_posts do
 end
 
 build_model :reviewable_articles do
-  is_reviewable :by => :users, :scale => [1,2,3], :accept_ip => false
+  is_reviewable :by => [:accounts, :users], :scale => [1,2,3], :accept_ip => false
 end
 
 build_model :cached_reviewable_posts do
