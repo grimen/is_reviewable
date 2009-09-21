@@ -263,7 +263,6 @@ module IsReviewable
           review_values[:rating] = review_values[:rating].to_f if review_values[:rating].present?
           
           if review_values[:rating].present? && !self.valid_rating_value?(review_values[:rating])
-            ::IsReviewable.log "Invalid rating value: #{review_values[:rating]} not in [#{self.rating_scale.join(', ')}].", :warn
             raise InvalidReviewValueError, "Invalid rating value: #{review_values[:rating]} not in [#{self.rating_scale.join(', ')}]."
           end
           
@@ -307,7 +306,6 @@ module IsReviewable
         rescue InvalidReviewerError, InvalidReviewValueError => e
           raise e
         rescue Exception => e
-          ::IsReviewable.log "Could not create/update review #{review.inspect} by #{reviewer.inspect}: #{e}", :warn
           raise RecordError, "Could not create/update review #{review.inspect} by #{reviewer.inspect}: #{e}"
         end
       end
@@ -334,7 +332,6 @@ module IsReviewable
           
           self.save_without_validation
         else
-          ::IsReviewable.log "Could not save review #{review.inspect} by #{reviewer.inspect}: #{e}", :warn
           raise RecordError, "Could not un-review #{review.inspect} by #{reviewer.inspect}: #{e}"
         end
       end
