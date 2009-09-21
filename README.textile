@@ -345,7 +345,7 @@ For running tests:
 * sqlite3-ruby
 * "thoughtbot-shoulda":http://github.com/thoughtbot/shoulda
 * "nakajima-acts_as_fu":http://github.com/nakajima/acts_as_fu
-* "jgre-monkeyspecdoc":http://github.com/jgre/monkeyspecdoc
+* "jgre-monkeyspecdoc":http://github.com/jgre/monkeyspecdoc (optional)
 
 h2. Notes
 

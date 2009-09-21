@@ -14,14 +14,14 @@ module IsReviewable
     
     # Filters.
     named_scope :limit,               lambda { |number_of_items|      {:limit => number_of_items} }
-    named_scope :since,               lambda { |created_at_datetime|  {:conditions => ['created_at >= ?', created_at_datetime]}
-    named_scope :recent,              lambda do |datetime|
+    named_scope :since,               lambda { |created_at_datetime|  {:conditions => ['created_at >= ?', created_at_datetime]} }
+    named_scope :recent,              lambda { |arg|
                                         if [::ActiveSupport::TimeWithZone, ::DateTime].any? { |c| c.is_a?(arg) }
                                           {:conditions => ['created_at >= ?', arg]}
                                         else
                                           {:limit => arg.to_i}
                                         end
-                                      end
+                                      }
     named_scope :between_dates,       lambda { |from_date, to_date|     {:conditions => {:created_at => (from_date..to_date)}} }
     named_scope :with_rating,         lambda { |rating_value_or_range|  {:conditions => {:rating => rating_value_or_range}} }
     named_scope :with_a_rating,       :conditions => ['rating IS NOT NULL']
