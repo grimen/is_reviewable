@@ -34,7 +34,7 @@ and in @config/environment.rb@:
 
 h2. Usage
 
-1. Generate migration:
+h3. 1. Generate migration:
 
 <pre>$ ./script/generate is_reviewable_migration</pre>
 
@@ -75,7 +75,7 @@ class IsReviewableMigration < ActiveRecord::Migration
 end
 </pre>
 
-2. Make your model reviewable:
+h3. 2. Make your model reviewable:
 
 <pre>
 class Post < ActiveRecord::Base
@@ -94,7 +94,7 @@ end
 
 *Note:* @:by@ is optional if you choose any of @User@ or @Account@ as reviewer classes.
 
-3. ...and here we go:
+h3. 3. ...and here we go:
 
 Examples:
 
