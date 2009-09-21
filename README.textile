@@ -359,7 +359,7 @@ Priority:
 * Write some more usage examples in this README. =)
 * Reviewable on multiple contexts, e.g. @is_reviewable :on => [:acting, :writing, ...]@. Alias method @is_reviewable_on@.
 * More thorough tests, especially for named scopes which is a bit tricky.
-* Fix the has-many-through-polymorphic issue - not supported by ActiveRecord, so try the other two approaches.
+* Fix the has-many-through-polymorphic issue - not supported by ActiveRecord, so try the other two approaches. Reason: I want this to work with just one query (using joins) the DRY way: @post.reviewers and @user.reviewables.
 * Finalize the Reviewable-finders (when the above one is solved).
 
 Maybe:
