@@ -8,7 +8,6 @@ end
 module IsReviewable
   module Reviewable
     
-    REVIEW_CLASS_NAME = 'Review'
     REVIEW_CLASS      = ::Review
     DEFAULT_SCALE     = 1..5
     DEFAULT_ACCEPT_IP = false
