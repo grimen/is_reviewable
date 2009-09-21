@@ -5,12 +5,22 @@ gem 'test-unit',            '= 1.2.3'
 gem 'thoughtbot-shoulda',   '>= 2.10.2'
 gem 'sqlite3-ruby',         '>= 1.2.0'
 gem 'nakajima-acts_as_fu',  '>= 0.0.5'
-gem 'jgre-monkeyspecdoc',   '>= 0.9.5'
+
+# Optional dependency
+begin
+  require 'monkeyspecdoc'
+rescue LoadError
+  begin
+    gem 'jgre-monkeyspecdoc',   '>= 0.9.5'
+    require 'monkeyspecdoc'
+  rescue LoadError
+    # skip
+  end
+end
 
 require 'test/unit'
 require 'shoulda'
 require 'acts_as_fu'
-require 'monkeyspecdoc'
 
 require 'test_helper'
 
