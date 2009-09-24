@@ -86,14 +86,23 @@ module IsReviewable
           end
         end
         
+        # Had to do this here - not sure why. Subclassing Review be enough? =S
+        ::Review.class_eval do
+          belongs_to :reviewable, :polymorphic => true unless self.respond_to?(:reviewable)
+          belongs_to :reviewer,   :polymorphic => true unless self.respond_to?(:reviewer)
+        end
+        
         # Assocations: Reviewer class(es) (e.g. User, Account, ...).
         options[:reviewer_classes].each do |reviewer_class|
           if ::Object.const_defined?(reviewer_class.name.to_sym)
             reviewer_class.class_eval do
-              has_many :reviews, :as => :reviewer, :dependent => :delete_all
-              # FIXME: has_many :through relationships through polymorphic relationships not supported by ActiveRecord.
-              # Possible solutions: Use gem "has_many_polymorphs", or using proxy objects with gem "roxy".
-              #has_many :reviewables, :through => :reviews
+              has_many  :reviews, :as => :reviewer, :dependent  => :delete_all
+              
+              # Polymorphic has-many-through not supported (has_many :reviewables, :through => :reviews), so:
+              def reviewables
+                ::Review.find(:all, :include => [:reviewable],
+                  :conditions => Support.polymorphic_conditions_for(self, :reviewer)).collect! { |review| review.reviewable }
+              end
             end
           end
         end
@@ -101,9 +110,12 @@ module IsReviewable
         # Assocations: Reviewable class (self) (e.g. Page).
         self.class_eval do
           has_many :reviews, :as => :reviewable, :dependent => :delete_all
-          # FIXME: has_many :through relationships through polymorphic relationships not supported by ActiveRecord.
-          # Possible solutions: Use gem "has_many_polymorphs", or using proxy objects with gem "roxy".
-          # has_many :reviewers, :through => :reviews
+          
+          # Polymorphic has-many-through not supported (has_many :reviewers, :through => :reviews), so:
+          def reviewers
+            ::Review.find(:all, :include => [:reviewer],
+              :conditions => Support.polymorphic_conditions_for(self, :reviewable)).collect! { |review| review.reviewer }
+          end
           
           before_create :init_reviewable_caching_fields
           

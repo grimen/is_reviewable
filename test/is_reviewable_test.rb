@@ -49,19 +49,31 @@ class IsReviewableTest < Test::Unit::TestCase
       assert !@regular_post.reviewable?
     end
     
-    should "have many reviews" do
-       assert @reviewable_post.respond_to?(:reviews)
-       assert @reviewable_article.respond_to?(:reviews)
-    end
-    
-    # should "have many reviewers" do
-    #   assert @reviewable_post.respond_to?(:reviewers)
-    #   assert @reviewable_article.respond_to?(:reviewers)
-    # end
-    
   end
   
   context "reviewable" do
+    
+    should "have many reviews" do
+      assert @reviewable_post.respond_to?(:reviews)
+      assert @reviewable_article.respond_to?(:reviews)
+      
+      @reviewable_post.review!(:reviewer => @user, :rating => 2.5)
+      @reviewable_post.review!(:reviewer => @user_2, :rating => 2.5)
+      
+      assert_equal 2, @reviewable_post.reviews.size
+    end
+    
+    should "have many reviewers" do
+      assert @reviewable_post.respond_to?(:reviewers)
+      assert @reviewable_article.respond_to?(:reviewers)
+      
+      @reviewable_post.review!(:reviewer => @user, :rating => 2.5)
+      @reviewable_post.review!(:reviewer => @user_2, :rating => 2.5)
+      @reviewable_post.review!(:reviewer => @user_3, :rating => 2.5)
+      
+      assert_equal 3, @reviewable_post.reviewers.size
+    end
+    
     should "have no reviews from the beginning" do
       assert_equal(@reviewable_post.reviews.size, 0)
     end
@@ -168,16 +180,25 @@ class IsReviewableTest < Test::Unit::TestCase
     should "have many reviews" do
       assert @user.respond_to?(:reviews)
       assert @account.respond_to?(:reviews)
-      assert !@gest.respond_to?(:reviews)
+      assert !@guest.respond_to?(:reviews)
+      
+      ReviewablePost.create.review!(:reviewer => @user, :rating => 2.5)
+      ReviewablePost.create.review!(:reviewer => @user, :rating => 2.5)
+      
+      assert_equal 2, @user.reviews.size
     end
     
-    # should "have many reviewables" do
-    #   assert @user.respond_to?(:reviewables)
-    #   assert @account.respond_to?(:reviewables)
-    #   assert !@gest.respond_to?(:reviewables)
-    # end
-    
-    # TODO: Should be tested more thoroughly.
+    should "have many reviewables" do
+      assert @user.respond_to?(:reviewables)
+      assert @account.respond_to?(:reviewables)
+      assert !@guest.respond_to?(:reviewables)
+      
+      ReviewablePost.create.review!(:reviewer => @user, :rating => 2.5)
+      ReviewablePost.create.review!(:reviewer => @user, :rating => 2.5)
+      ReviewablePost.create.review!(:reviewer => @user, :rating => 2.5)
+      
+      assert_equal 3, @user.reviewables.size
+    end
     
   end
   
@@ -195,7 +216,7 @@ class IsReviewableTest < Test::Unit::TestCase
       # Example: Review.complete.proxy_options # => :conditions=>["rating IS NOT NULL AND body IS NOT NULL AND LENGTH(body) > 0"]}
       
       # Old: This won't work...
-      #assert named_scopes.all? { |named_scope| Review.respond_to?(named_scope, true) }
+      # assert named_scopes.all? { |named_scope| Review.respond_to?(named_scope, true) }
       #assert named_scopes.all? { |named_scope| @reviewable_post.reviews.respond_to?(named_scope, true) }
     end
     
