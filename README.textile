@@ -149,16 +149,16 @@ h2. Finders
 IsReviewable has plenty of useful finders implemented using named scopes. Here they are:
 
 h3. @Review@
-
+ 
 h4. Order:
-
+ 
 * @in_order@ - most recent reviews last (order by creation date).
 * @most_recent@ - most recent reviews first (opposite of @in_order@ above).
 * @lowest_rating@ - reviews with lowest ratings first.
 * @highest_rating@ - reviews with lowest ratings first.
-
+ 
 h4. Filter:
-
+ 
 * @limit(<number_of_items>)@ - maximum @<number_of_items>@ reviews.
 * @since(<created_at_datetime>)@ - reviews created since @<created_at_datetime>@.
 * @recent(<datetime_or_size>)@ - if DateTime: reviews created since @<datetime_or_size>@, else if Fixnum: pick last @<datetime_or_size>@ number of reviews.
@@ -175,15 +175,15 @@ h4. Filter:
 * @by(<reviewer_object>)@ - reviews by the @<reviewer_object>@ type of reviewer models.
 
 h3. @Reviewable@
-
+ 
 h4. Order:
 
 _TODO: Documentation on named scopes for reviewable._
-
+ 
 h4. Filter:
 
 _TODO: Documentation on named scopes for reviewable._
-
+ 
 h3. @Reviewer@
 
 h4. Order:
@@ -193,7 +193,7 @@ _TODO: Documentation on named scopes for reviewable._
 h4. Filter:
 
 _TODO: Documentation on named scopes for reviewable._
-
+ 
 h3. Examples using finders:
 
 <pre>
