@@ -99,9 +99,14 @@ module IsReviewable
               has_many  :reviews, :as => :reviewer, :dependent  => :delete_all
               
               # Polymorphic has-many-through not supported (has_many :reviewables, :through => :reviews), so:
-              def reviewables
-                ::Review.find(:all, :include => [:reviewable],
-                  :conditions => Support.polymorphic_conditions_for(self, :reviewer)).collect! { |review| review.reviewable }
+              def reviewables(*args)
+                query_options = args.extract_options!
+                query_options[:include] = [:reviewable]
+                query_options.reverse_merge!(
+                    :conditions => Support.polymorphic_conditions_for(self, :reviewer)
+                  )
+                  
+                ::Review.find(:all, query_options).collect! { |review| review.reviewable }
               end
             end
           end
@@ -112,9 +117,14 @@ module IsReviewable
           has_many :reviews, :as => :reviewable, :dependent => :delete_all
           
           # Polymorphic has-many-through not supported (has_many :reviewers, :through => :reviews), so:
-          def reviewers
-            ::Review.find(:all, :include => [:reviewer],
-              :conditions => Support.polymorphic_conditions_for(self, :reviewable)).collect! { |review| review.reviewer }
+          def reviewers(*args)
+            query_options = args.extract_options!
+            query_options[:include] = [:reviewer]
+            query_options.reverse_merge!(
+                :conditions => Support.polymorphic_conditions_for(self, :reviewable)
+              )
+              
+            ::Review.find(:all, query_options).collect! { |review| review.reviewer }
           end
           
           before_create :init_reviewable_caching_fields
