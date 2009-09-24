@@ -139,10 +139,17 @@ h2. Mixin Arguments
 
 The @is_reviewable@ mixin takes some hash arguments for customization:
 
+*Basic*
+
 * @:by@ - the reviewer model, e.g. User, Account, etc. (accepts either symbol or class, i.e. @User@ <=> @:user@ <=> @:users@). The reviewer model will be setup for you. Note: Polymorhic, so it accepts any model. Default: @User@, or auto-detection fails.
 * @:scale@/@:range@/@:values@ - range, or array, of valid rating values. Default: @1..5@. Note: Negative values are allowed too, and a range of values are not required, i.e. [-1, 1] is valid as well as [1,3,5]. =)
-* @:total_precision@ - maximum number of digits for the average rating value. Default: @1@.
 * @:accept_ip@ - accept anonymous users uniquely identified by IP (well...you handle the bots =D). See examples below how to use this in comparison to reviewer model. Default: @false@.
+
+*Advanced*
+
+* @:total_precision@ - maximum number of digits for the average rating value. Default: @1@.
+* @:step@ - useful if you want to specify a custom step for each scale value within a range of values. Default: @1@ for range of fixnum, auto-detected based on first value in range of float.
+* @:steps@ - similar to @:step@ (they relate to each other), but instead of specifying a step you can specify how many steps you want. Default: auto-detected based on custom or default value @:step@.
 
 h2. Finders
 
