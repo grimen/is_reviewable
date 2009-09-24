@@ -103,27 +103,32 @@ Review.destroy_all # just in case...
 @post = Post.first
 @user = User.first
 
-@post.review!(:reviewer => @user, :rating => 2) # new reviewer (type: object) => create
-@post.review!(:reviewer => @user, :rating => 5) # same reviewer (type: object) => update
+@post.review!(:reviewer => @user, :rating => 2)  # new reviewer (type: object) => create
+@post.review!(:reviewer => @user, :rating => 5)  # same reviewer (type: object) => update
 
-@post.total_reviews # => 1
-@post.average_rating # => 5.0
+@post.total_reviews   # => 1
+@post.average_rating  # => 5.0
 
-@post.review!(:reviewer => '128.0.0.0', :rating => 4) # new reviewer (type: IP) => create
-@post.review!(:reviewer => '128.0.0.0', :rating => 2) # same reviewer (type: IP) => update
+@post.review!(:reviewer => '128.0.0.0', :rating => 4)  # new reviewer (type: IP) => create
+@post.review!(:reviewer => '128.0.0.0', :rating => 2)  # same reviewer (type: IP) => update
 
-@post.total_reviews # => 2
-@post.average_rating # => 3.5
+@post.total_reviews   # => 2
+@post.average_rating  # => 3.5
 
-@post.review!(:reviewer => @user, :rating => nil, :body => "Lorem ipsum...") # same reviewer (type: IP) => update
+@post.review!(:reviewer => @user, :rating => nil, :body => "Lorem ipsum...")  # same reviewer (type: IP) => update
 
-@post.total_reviews # => 2
-@post.average_rating # => 2.0, i.e. don't count nil (a.k.a. "no opinion")
+@post.total_reviews   # => 2
+@post.average_rating  # => 2.0, i.e. don't count nil (a.k.a. "no opinion")
 
-@post.unreview!(:reviewer => '128.0.0.0') # delete existing review (type: IP) => destroy
+@post.unreview!(:reviewer => '128.0.0.0')  # delete existing review (type: IP) => destroy
 
-@post.total_reviews # => 1
-@post.average_rating # => 2.0
+@post.total_reviews   # => 1
+@post.average_rating  # => 2.0
+
+@post.reviews       # => reviews on @post
+@post.reviewers     # => reviewers that reviewed @post
+@user.reviews       # => reviews by @user
+@user.reviewables   # => reviewable objects that got reviewed by @user
 
 # TODO: A few more samples...
 
@@ -145,14 +150,14 @@ IsReviewable has plenty of useful finders implemented using named scopes. Here t
 
 h3. @Review@
 
-Order:
+h4. Order:
 
 * @in_order@ - most recent reviews last (order by creation date).
 * @most_recent@ - most recent reviews first (opposite of @in_order@ above).
 * @lowest_rating@ - reviews with lowest ratings first.
 * @highest_rating@ - reviews with lowest ratings first.
 
-Filter:
+h4. Filter:
 
 * @limit(<number_of_items>)@ - maximum @<number_of_items>@ reviews.
 * @since(<created_at_datetime>)@ - reviews created since @<created_at_datetime>@.
@@ -163,19 +168,33 @@ Filter:
 * @without_a_rating@ - opposite of @with_a_rating@ (above).
 * @with_a_body@ - reviews with a body/comment, i.e. not nil/blank.
 * @without_a_body@ - opposite of @with_a_body@ (above).
-* @complete@ - pick reviews with both rating and comments, i.e. "full reviews" where.
-* @of_reviewable_type(<reviewable_type>)@ - pich reviews of @<reviewable_type>@ type of reviewable models.
-* @by_reviewer_type(<reviewer_type>)@ - pich reviews of @<reviewer_type>@ type of reviewer models.
+* @complete@ - reviews with both rating and comments, i.e. "full reviews" where.
+* @of_reviewable_type(<reviewable_type>)@ - reviews of @<reviewable_type>@ type of reviewable models.
+* @by_reviewer_type(<reviewer_type>)@ - reviews of @<reviewer_type>@ type of reviewer models.
 * @on(<reviewable_object>)@ - reviews on the reviewable object @<reviewable_object>@ .
 * @by(<reviewer_object>)@ - reviews by the @<reviewer_object>@ type of reviewer models.
 
 h3. @Reviewable@
 
-Filter:
+h4. Order:
 
 _TODO: Documentation on named scopes for reviewable._
 
-Examples using finders:
+h4. Filter:
+
+_TODO: Documentation on named scopes for reviewable._
+
+h3. @Reviewer@
+
+h4. Order:
+
+_TODO: Documentation on named scopes for reviewable._
+
+h4. Filter:
+
+_TODO: Documentation on named scopes for reviewable._
+
+h3. Examples using finders:
 
 <pre>
 @user = User.first
@@ -200,6 +219,10 @@ Review.by(@user)  # => [all reviews by @user] <=> @user.reviews
 
 # etc, etc. It's all named scopes, so it's really no new hokus-pokus you have to learn.
 </pre>
+
+h2. Additional Methods
+
+*Note:* See documentation (RDoc).
 
 h2. Extend the Review model
 
@@ -354,18 +377,22 @@ h2. Notes
 
 h2. TODO
 
-Priority:
+h3. Priority:
 
-* Write some more usage examples in this README. =)
-* Reviewable on multiple contexts, e.g. @is_reviewable :on => [:acting, :writing, ...]@. Alias method @is_reviewable_on@.
-* More thorough tests, especially for named scopes which is a bit tricky.
-* Finalize the Reviewable-finders (when the above one is solved).
+* bug: Accept multiple reviewers (of different types): @average_rating_by@, etc.. 
+* documentation: A few more README-examples.
+* feature: Reviewable on multiple contexts, e.g. @is_reviewable :on => [:acting, :writing, ...]@. Alias method @is_reviewable_on@.
+* testing: More thorough tests, especially for named scopes which is a bit tricky.
+* feature: Useful finders for @Reviewable@.
+* feature: Useful finders for @Reviewer@.
 
-Maybe:
+h3. Maybe:
 
-* Make alias helpers to implement functionality like VoteFu (http://github.com/peteonrails/vote_fu), simply just aliasing methods with existing ones with hardcoded parameters. Not required because this is supported already, it's all about semantics and sassy code.
+* feature: Make alias helpers to implement functionality like VoteFu (http://github.com/peteonrails/vote_fu), simply just aliasing methods with existing ones with hardcoded parameters. Not required because this is supported already, it's all about semantics and sassy code.
 
 h2. Related Links
+
+...that might be of interest.
 
 * "jQuery Star Rating":http://github.com/rathgar/jquery-star-rating/ - javascript star rating plugin for Rails on jQuery, if you don't want to do the rating widget on your own. It should be quite straightforward to customize the appearance of it for your needs too.
 

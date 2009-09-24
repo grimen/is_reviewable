@@ -417,7 +417,7 @@ module IsReviewable
       # When the has-many-through-polymoprhic issue is solved:
       # 
       # * users that reviewed this with rating X
-      # * users that reviewed this, also reviewed [...]
+      # * users that reviewed this, also reviewed [...] with same rating
       
     end
     
