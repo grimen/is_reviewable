@@ -308,7 +308,7 @@ end
 
 h3. Routes
 
-@config/routes.rs@
+@config/routes.rb@
 
 <pre>
 map.resources :posts, :member => {:rate => :put}
