@@ -268,9 +268,9 @@ h2. Example
 
 h3. Controller
 
-Depending on your implementation: You might - or might not - need a Controller, but for most cases where you only want to allow rating of something, a controller most probably is overkill. In the case of a review, this is how one cold look like:
+Depending on your implementation: You might - or might not - need a Controller, but for most cases where you only want to allow rating of something, a controller most probably is overkill. In the case of a review, this is how one cold look like (in this example, I'm using the excellent the "InheritedResources":http://github.com/josevalim/inherited_resources):
 
-Using the excellent "InheritedResources":http://github.com/josevalim/inherited_resources - @app/controllers/reviews_controller.rb@:
+Example: @app/controllers/reviews_controller.rb@:
 
 <pre>
 class ReviewsController < InheritedResources::Base
@@ -327,7 +327,7 @@ Example: @app/views/posts/show.html.haml@
   = @post.body
 %p
   = "Your rating:"
-  = render '/reviews/rating', :resource => @post
+  #rating_wrapper= render '/reviews/rating', :resource => @post
 </pre>
 
 Example: @app/views/reviews/_rating.html.haml@
@@ -335,8 +335,8 @@ Example: @app/views/reviews/_rating.html.haml@
 <pre>
 .rating
   - if resource.present? && resource.reviewable?
-    - if current_user.present?
-      - current_rating = resource.review_by(current_user).try(:rating)
+    - if reviewer.present?
+      - current_rating = resource.review_by(reviewer).try(:rating)
       - resource.reviewable_scale.each do |rating|
         = link_to_remote "#{rating.to_i}", :url => rate_post_path(resource, :rating => rating.to_i), :method => :put, :html => {:class => "rate rated_#{rating.to_i}#{' current' if current_rating == rating}"}
       = link_to_remote "no opinion", :url => rate_post_path(resource, :rating => nil), :method => :put, :html => {:class => "rate rated_none#{' current' unless current_rating}"}
@@ -347,6 +347,19 @@ Example: @app/views/reviews/_rating.html.haml@
 </pre>
 
 *Note:* Skipping review-body (etc.) in this view sample, but that is straightforward to implement anyways.
+
+h3. JavaScript/AJAX
+
+...and finally - as we in this example using AJAX - the javascript response (in this example, I'm using RJS + jQuery - don't get me started on why I don't use Prototype for UI...).
+
+Example: @app/views/reviews/rate.js.rjs@
+
+<pre>
+page.replace_html '#rating_wrapper', render('/reviews/rating', :reviewable => @post, :reviewer => current_user)
+page.visual_effect :highlight, '.rating .current'
+</pre>
+
+Done! =)
 
 h2. Design Implications: Additional Use Cases
 
