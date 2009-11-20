@@ -101,24 +101,24 @@ Review.destroy_all # just in case...
 @post = Post.first
 @user = User.first
 
-@post.review!(:reviewer => @user, :rating => 2)  # new reviewer (type: object) => create
-@post.review!(:reviewer => @user, :rating => 5)  # same reviewer (type: object) => update
+@post.review!(:by => @user, :rating => 2)  # new reviewer (type: object) => create
+@post.review!(:by => @user, :rating => 5)  # same reviewer (type: object) => update
 
 @post.total_reviews   # => 1
 @post.average_rating  # => 5.0
 
-@post.review!(:reviewer => '128.0.0.0', :rating => 4)  # new reviewer (type: IP) => create
-@post.review!(:reviewer => '128.0.0.0', :rating => 2)  # same reviewer (type: IP) => update
+@post.review!(:by => '128.0.0.0', :rating => 4)  # new reviewer (type: IP) => create
+@post.review!(:by => '128.0.0.0', :rating => 2)  # same reviewer (type: IP) => update
 
 @post.total_reviews   # => 2
 @post.average_rating  # => 3.5
 
-@post.review!(:reviewer => @user, :rating => nil, :body => "Lorem ipsum...")  # same reviewer (type: IP) => update
+@post.review!(:by => @user, :rating => nil, :body => "Lorem ipsum...")  # same reviewer (type: IP) => update
 
 @post.total_reviews   # => 2
 @post.average_rating  # => 2.0, i.e. don't count nil (a.k.a. "no opinion")
 
-@post.unreview!(:reviewer => '128.0.0.0')  # delete existing review (type: IP) => destroy
+@post.unreview!(:by => '128.0.0.0')  # delete existing review (type: IP) => destroy
 
 @post.total_reviews   # => 1
 @post.average_rating  # => 2.0
@@ -293,7 +293,7 @@ class PostsController < InheritedResources::Base
   
   def rate
     begin
-      @post.review! :reviewer => current_user, params.slice(:rating, :body)
+      @post.review! :by => current_user, params.slice(:rating, :body)
     rescue
       flash[:error] = 'Sad panda...could not rate for some reason. O_o'
     end
