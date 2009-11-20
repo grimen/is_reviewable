@@ -22,11 +22,11 @@ h2. Installation
 
 *Gem:*
 
-<pre>sudo gem install grimen-is_reviewable</pre>
+<pre>sudo gem install is_reviewable</pre>
 
 and in @config/environment.rb@:
 
-<pre>config.gem 'grimen-is_reviewable', :lib => 'is_reviewable'</pre>
+<pre>config.gem 'is_reviewable'</pre>
 
 *Plugin:*
 
@@ -88,11 +88,9 @@ or, with explicit reviewer (or reviewers):
 <pre>
 class Book < ActiveRecord::Base
   # Setup associations for the reviewer class(es) automatically, and specify an explicit scale instead.
-  is_reviewable :by => [:users, :journalists], :scale => 0..5
+  is_reviewable :by => [:users, :ducks], :scale => 0..5
 end
 </pre>
-
-*Note:* @:by@ is optional if you choose any of @User@ or @Account@ as reviewer classes.
 
 h3. 3. ...and here we go:
 
@@ -141,9 +139,9 @@ The @is_reviewable@ mixin takes some hash arguments for customization:
 
 *Basic*
 
-* @:by@ - the reviewer model, e.g. User, Account, etc. (accepts either symbol or class, i.e. @User@ <=> @:user@ <=> @:users@). The reviewer model will be setup for you. Note: Polymorhic, so it accepts any model. Default: @User@, or auto-detection fails.
+* @:by@ - the reviewer model(s), e.g. User, Account, etc. (accepts either symbol or class, i.e. @User@ <=> @:user@ <=> @:users@, or an array of such if there are more than one reviewer model). The reviewer model will be setup for you. Note: Polymorhic, so it accepts any model. Default: @nil@.
 * @:scale@/@:range@/@:values@ - range, or array, of valid rating values. Default: @1..5@. Note: Negative values are allowed too, and a range of values are not required, i.e. [-1, 1] is valid as well as [1,3,5]. =)
-* @:accept_ip@ - accept anonymous users uniquely identified by IP (well...you handle the bots =D). See examples below how to use this in comparison to reviewer model. Default: @false@.
+* @:accept_ip@ - accept anonymous users uniquely identified by IP (well...you handle the bots =D). See examples below how to use this as your visitor object. Default: @false@.
 
 *Advanced*
 
@@ -151,7 +149,21 @@ The @is_reviewable@ mixin takes some hash arguments for customization:
 * @:step@ - useful if you want to specify a custom step for each scale value within a range of values. Default: @1@ for range of fixnum, auto-detected based on first value in range of float.
 * @:steps@ - similar to @:step@ (they relate to each other), but instead of specifying a step you can specify how many steps you want. Default: auto-detected based on custom or default value @:step@.
 
-h2. Finders
+h2. Aliases
+
+To make the usage of IsReviewable a bit more generic (similar to other plugins you may use), there are two useful aliases for this purpose:
+
+* @Review#owner@    <=>   @Review#reviewer@
+* @Review#object@   <=>   @Review#reviewable@
+
+Example:
+
+<pre>
+@post.reviews.first.owner == post.reviews.first.reviewer      # => true
+@post.reviews.first.object == post.reviews.first.reviewable   # => true
+</pre>
+
+h2. Finders (Named Scopes)
 
 IsReviewable has plenty of useful finders implemented using named scopes. Here they are:
 
@@ -162,7 +174,7 @@ h3. @Review@
 * @in_order@ - most recent reviews last (order by creation date).
 * @most_recent@ - most recent reviews first (opposite of @in_order@ above).
 * @lowest_rating@ - reviews with lowest ratings first.
-* @highest_rating@ - reviews with lowest ratings first.
+* @highest_rating@ - reviews with highest ratings first.
 
 *Filter:*
 
@@ -183,23 +195,11 @@ h3. @Review@
 
 h3. @Reviewable@
 
-*Order:*
-
-_TODO: Documentation on named scopes for reviewable._
-
-*Filter:*
-
-_TODO: Documentation on named scopes for reviewable._
+_TODO: Documentation on named scopes for Reviewable._
 
 h3. @Reviewer@
 
-*Order:*
-
-_TODO: Documentation on named scopes for reviewable._
-
-*Filter:*
-
-_TODO: Documentation on named scopes for reviewable._
+_TODO: Documentation on named scopes for Reviewer._
  
 h3. Examples using finders:
 
@@ -207,16 +207,16 @@ h3. Examples using finders:
 @user = User.first
 @post = Post.first
 
-@post.reviews.recent(10)  # => [10 most recent reviews]
+@post.reviews.recent(10)          # => [10 most recent reviews]
 @post.reviews.recent(1.week.ago)  # => [reviews created since 1 week ago]
 
-@post.reviews.with_rating(3.5..4.0)  # => [all reviews on @post with rating between 3.5 and 4.0]
+@post.reviews.with_rating(3.5..4.0)     # => [all reviews on @post with rating between 3.5 and 4.0]
 
-@post.reviews.by_reviewer_type(:user)  # => [all reviews on @post by User-objects]
+@post.reviews.by_reviewer_type(:user)   # => [all reviews on @post by User-objects]
 # ...or:
 @post.reviews.by_reviewer_type(:users)  # => [all reviews on @post by User-objects]
 # ...or:
-@post.reviews.by_reviewer_type(User)  # => [all reviews on @post by User-objects]
+@post.reviews.by_reviewer_type(User)    # => [all reviews on @post by User-objects]
 
 @user.reviews.on(@post)  # => [all reviews by @user on @post]
 @post.reviews.by(@user)  # => [all reviews by @user on @post] (equivalent with above)
@@ -245,7 +245,7 @@ end
 
 h2. Caching
 
-If the visitable class table - in the sample above @Post@ - contains a columns @reviews_count@ and @average_rating@, then a cached value will be maintained within it for the number of reviews and the average rating the object have got.
+If the visitable class table - in the sample above @Post@ - contains a columns @cached_total_reviews@ and @cached_average_rating@, then a cached value will be maintained within it for the number of reviews and the average rating the object have got.
 
 Additional caching fields (to a reviewable model table):
 
@@ -379,20 +379,11 @@ end
 
 h2. Dependencies
 
-Basic usage:
-
-* "rails":http://github.com/rails/rails (well...)
-
-For running tests:
-
-* sqlite3-ruby
-* "thoughtbot-shoulda":http://github.com/thoughtbot/shoulda
-* "nakajima-acts_as_fu":http://github.com/nakajima/acts_as_fu
-* "jgre-monkeyspecdoc":http://github.com/jgre/monkeyspecdoc (optional)
+For testing: "shoulda":http://github.com/thoughtbot/shoulda, "redgreen":http://gemcutter.org/gems/redgreen, "acts_as_fu":http://github.com/nakajima/acts_as_fu, and "sqlite3-ruby":http://gemcutter.org/gems/sqlite3-ruby.
 
 h2. Notes
 
-* Tested with Ruby 1.9.1.
+* Tested with Ruby 1.8.6 - 1.9.1 and Rails 2.3.2 - 2.3.4.
 * Let me know if you find any bugs; not used in production yet so consider this a concept version.
 
 h2. TODO
@@ -402,9 +393,10 @@ h3. Priority:
 * bug: Accept multiple reviewers (of different types): @average_rating_by@, etc.. 
 * documentation: A few more README-examples.
 * feature: Reviewable on multiple contexts, e.g. @is_reviewable :on => [:acting, :writing, ...]@. Alias method @is_reviewable_on@.
-* testing: More thorough tests, especially for named scopes which is a bit tricky.
 * feature: Useful finders for @Reviewable@.
 * feature: Useful finders for @Reviewer@.
+* testing: More thorough tests, especially for named scopes which is a bit tricky.
+* refactor: Refactor generic stuff to new gem, @is_base@, and add as gem dependency. Reason: Share the same patterns for my very similar ActiveRecord plugins: is_reviewable, is_visitable, is_commentable, and future additions.
 
 h3. Maybe:
 
@@ -418,4 +410,5 @@ h2. Related Links
 
 h2. License
 
-Copyright (c) 2009 Jonas Grimfelt, released under the MIT-license.
+Released under the MIT license.
+Copyright (c) "Jonas Grimfelt":http://github.com/grimen

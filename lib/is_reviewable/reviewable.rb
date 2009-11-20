@@ -8,24 +8,15 @@ end
 module IsReviewable
   module Reviewable
     
-    REVIEW_CLASS      = ::Review
-    DEFAULT_SCALE     = 1..5
-    DEFAULT_ACCEPT_IP = false
-    CACHABLE_FIELDS   = [
+    ASSOCIATION_CLASS = ::Review
+    CACHABLE_FIELDS = [
         :reviews_count,
         :average_rating
       ].freeze
-    ASSOCIATION_FIELDS = [
-        :reviewable_id,
-        :reviewable_type,
-        :reviewer_id,
-        :reviewer_type,
-        :ip
-      ].freeze
-    CONTENT_FIELDS = [
-        :rating,
-        :body
-      ].freeze
+    DEFAULTS = {
+        :accept_ip => false,
+        :scale => 1..5 
+      }.freeze
       
     def self.included(base) #:nodoc:
       base.class_eval do
@@ -49,9 +40,9 @@ module IsReviewable
       def is_reviewable(*args)
         options = args.extract_options!
         options.reverse_merge!(
-            :by         => Reviewer::DEFAULT_CLASS_NAME,
-            :scale      => options[:values] || options[:range] || DEFAULT_SCALE,
-            :accept_ip  => options[:anonymous] || DEFAULT_ACCEPT_IP # i.e. also accepts unique IPs as reviewer
+            :by         => nil,
+            :scale      => options[:values] || options[:range] || DEFAULTS[:scale],
+            :accept_ip  => options[:anonymous] || DEFAULTS[:accept_ip] # i.e. also accepts unique IPs as reviewer
           )
         scale = options[:scale]
         if options[:step].blank? && options[:steps].blank?
@@ -73,39 +64,38 @@ module IsReviewable
         raise InvalidConfigValueError, ":total_precision must be an integer." unless options[:total_precision].is_a?(::Fixnum)
         
         # Assocations: Review class (e.g. Review).
-        options[:review_class] = REVIEW_CLASS
+        options[:review_class] = ASSOCIATION_CLASS
         
-        # Reviewer class(es).
-        options[:by] = [options[:by]] unless options[:by].is_a?(::Array)
-        options[:reviewer_class_names] = options[:by].collect { |class_name| class_name.to_s.singularize.classify }
-        options[:reviewer_classes] = options[:reviewer_class_names].collect do |class_name|
-          begin
-            class_name.constantize
-          rescue NameError => e
-            raise InvalidReviewerError, "Reviewer class #{options[:reviewer_class_name]} not defined, needs to be defined. #{e}"
-          end
-        end
-        
-        # Had to do this here - not sure why. Subclassing Review be enough? =S
-        ::Review.class_eval do
+        # Had to do this here - not sure why. Subclassing Review should be enough? =S
+        "::#{options[:review_class]}".constantize.class_eval do
           belongs_to :reviewable, :polymorphic => true unless self.respond_to?(:reviewable)
           belongs_to :reviewer,   :polymorphic => true unless self.respond_to?(:reviewer)
+        end
+        
+        # Reviewer class(es).
+        options[:reviewer_classes] = [*options[:by]].collect do |class_name|
+          begin
+            class_name.to_s.singularize.classify.constantize
+          rescue NameError => e
+            raise InvalidReviewerError, "Reviewer class #{class_name} not defined, needs to be defined. #{e}"
+          end
         end
         
         # Assocations: Reviewer class(es) (e.g. User, Account, ...).
         options[:reviewer_classes].each do |reviewer_class|
           if ::Object.const_defined?(reviewer_class.name.to_sym)
             reviewer_class.class_eval do
-              has_many  :reviews, :as => :reviewer, :dependent  => :delete_all
-              
+              #has_many  :reviews, :as => :reviewer, :dependent  => :delete_all
+              has_many :reviews,
+                :foreign_key => :reviewer_id,
+                :class_name => options[:review_class].name
               # Polymorphic has-many-through not supported (has_many :reviewables, :through => :reviews), so:
+              # TODO: Implement with :join
               def reviewables(*args)
                 query_options = args.extract_options!
                 query_options[:include] = [:reviewable]
-                query_options.reverse_merge!(
-                    :conditions => Support.polymorphic_conditions_for(self, :reviewer)
-                  )
-                  
+                query_options.reverse_merge!(:conditions => Support.polymorphic_conditions_for(self, :reviewer))
+                
                 ::Review.find(:all, query_options).collect! { |review| review.reviewable }
               end
             end
@@ -117,13 +107,12 @@ module IsReviewable
           has_many :reviews, :as => :reviewable, :dependent => :delete_all
           
           # Polymorphic has-many-through not supported (has_many :reviewers, :through => :reviews), so:
+          # TODO: Implement with :join
           def reviewers(*args)
             query_options = args.extract_options!
             query_options[:include] = [:reviewer]
-            query_options.reverse_merge!(
-                :conditions => Support.polymorphic_conditions_for(self, :reviewable)
-              )
-              
+            query_options.reverse_merge!(:conditions => Support.polymorphic_conditions_for(self, :reviewable))
+            
             ::Review.find(:all, query_options).collect! { |review| review.reviewer }
           end
           
@@ -134,8 +123,8 @@ module IsReviewable
         end
         
         # Save the initialized options for this class.
-        write_inheritable_attribute :is_reviewable_options, options
-        class_inheritable_reader :is_reviewable_options
+        self.write_inheritable_attribute :is_reviewable_options, options
+        self.class_inheritable_reader :is_reviewable_options
       end
       
       # Checks if this object reviewable or not.
@@ -169,9 +158,10 @@ module IsReviewable
         #
         def validate_reviewer(identifiers)
           raise InvalidReviewerError, "Argument can't be nil: no reviewer object or IP provided." if identifiers.blank?
-          reviewer = identifiers[:reviewer] || identifiers[:user] || identifiers[:account] || identifiers[:ip]
+          reviewer = identifiers[:by] || identifiers[:reviewer] || identifiers[:user] || identifiers[:ip]
           is_ip = Support.is_ip?(reviewer)
           reviewer = reviewer.to_s.strip if is_ip
+          
           unless Support.is_active_record?(reviewer) || is_ip
             raise InvalidReviewerError, "Reviewer is of wrong type: #{reviewer.inspect}."
           end
@@ -281,7 +271,7 @@ module IsReviewable
           review = self.review_by(identifiers_and_options)
           
           # Except for the reserved fields, any Review-fields should be be able to update.
-          review_values = identifiers_and_options.except(*ASSOCIATION_FIELDS)
+          review_values = identifiers_and_options.except(*::IsReviewable::Review::ASSOCIATIVE_FIELDS)
           review_values[:rating] = review_values[:rating].to_f if review_values[:rating].present?
           
           if review_values[:rating].present? && !self.valid_rating_value?(review_values[:rating])
@@ -309,21 +299,8 @@ module IsReviewable
           # Update non-association attributes, such as rating, body (the review text), and any custom fields.
           review.attributes = review_values.slice(*review.attribute_names.collect { |an| an.to_sym })
           
-          if self.reviewable_caching_fields?(:total_reviews)
-            begin
-              self.cached_total_reviews += 1 if review.new_record?
-            rescue
-              self.cached_total_reviews = self.total_reviews(true)
-            end
-          end
-          
-          if self.reviewable_caching_fields?(:average_rating)
-            self.cached_average_rating = self.average_rating(true)
-            # new_rating = review.rating - (old_rating || 0)
-            # self.cached_average_rating = (self.cached_average_rating + new_rating) / self.cached_total_reviews.to_f
-          end
-          
-          review.save && self.save_without_validation
+          # Save review and cachable data.
+          review.save && self.update_cache!
           review
         rescue InvalidReviewerError, InvalidReviewValueError => e
           raise e
@@ -339,26 +316,28 @@ module IsReviewable
         review_rating = review.rating if review.present?
         
         if review && review.destroy
-          if self.reviewable_caching_fields?(:total_reviews)
-            begin
-              self.cached_total_reviews -= 1
-            rescue
-              self.cached_total_reviews = self.reviews.size
-            end
-          end
-          
-          if self.reviewable_caching_fields?(:average_rating)
-            self.cached_average_rating = self.average_rating(true)
-            # self.cached_average_rating = (self.cached_average_rating - review_rating) / self.cached_total_reviews.to_f
-          end
-          
-          self.save_without_validation
+          self.update_cache!
         else
           raise RecordError, "Could not un-review #{review.inspect} by #{reviewer.inspect}: #{e}"
         end
       end
       
       protected
+        
+        # Update cache fields if available/enabled.
+        #
+        def update_cache!
+          if self.reviewable_caching_fields?(:total_reviews)
+            # self.cached_total_reviews += 1 if review.new_record?
+            self.cached_total_reviews = self.total_reviews(true)
+          end
+          if self.reviewable_caching_fields?(:average_rating)
+            # new_rating = review.rating - (old_rating || 0)
+            # self.cached_average_rating = (self.cached_average_rating + new_rating) / self.cached_total_reviews.to_f
+            self.cached_average_rating = self.average_rating(true)
+          end
+          self.save_without_validation if self.changed?
+        end
         
         # Checks if a certain value is a valid rating value for this reviewable object.
         #
@@ -414,7 +393,7 @@ module IsReviewable
     
     module Finders
       
-      # When the has-many-through-polymoprhic issue is solved:
+      # TODO: Finders
       # 
       # * users that reviewed this with rating X
       # * users that reviewed this, also reviewed [...] with same rating

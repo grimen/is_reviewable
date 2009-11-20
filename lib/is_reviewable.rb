@@ -31,4 +31,8 @@ module IsReviewable
     @@logger.send(level.to_sym, message)
   end
   
+  def root
+    @@root ||= File.expand_path(File.join(File.dirname(__FILE__), *%w[..]))
+  end
+  
 end

@@ -3,16 +3,33 @@
 module IsReviewable
   class Review < ::ActiveRecord::Base
     
+    ASSOCIATIVE_FIELDS = [
+        :reviewable_id,
+        :reviewable_type,
+        :reviewer_id,
+        :reviewer_type,
+        :ip
+      ].freeze
+    CONTENT_FIELDS = [
+        :rating,
+        :body
+      ].freeze
+      
+    # Associations.
     belongs_to :reviewable, :polymorphic => true
     belongs_to :reviewer,   :polymorphic => true
     
-    # Order.
+    # Aliases.
+    alias :object :reviewable
+    alias :owner  :reviewer
+    
+    # Named scopes: Order.
     named_scope :in_order,            :order => 'created_at ASC'
     named_scope :most_recent,         :order => 'created_at DESC'
     named_scope :lowest_rating,       :order => 'rating ASC'
     named_scope :highest_rating,      :order => 'rating DESC'
     
-    # Filters.
+    # Named scopes: Filters.
     named_scope :limit,               lambda { |number_of_items|      {:limit => number_of_items} }
     named_scope :since,               lambda { |created_at_datetime|  {:conditions => ['created_at >= ?', created_at_datetime]} }
     named_scope :recent,              lambda { |arg|

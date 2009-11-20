@@ -5,11 +5,13 @@ class IsReviewableTest < Test::Unit::TestCase
   
   def setup
     @review = ::Review.new
+    
     @user = ::User.create
     @user_2 = ::User.create
     @user_3 = ::User.create
     @guest = ::Guest.create
     @account = ::Account.create
+    
     @regular_post = ::Post.create
     @reviewable_post = ::ReviewablePost.create
     @reviewable_article = ::ReviewableArticle.create
@@ -39,7 +41,7 @@ class IsReviewableTest < Test::Unit::TestCase
           :reviews
         ].flatten
         
-      assert public_instance_methods.all? { |m| @reviewable_post.respond_to?(m.to_sym) }
+      assert public_instance_methods.all? { |m| @reviewable_post.respond_to?(m) }
       assert !public_instance_methods.all? { |m| @regular_post.respond_to?(m) }
     end
     
@@ -57,8 +59,8 @@ class IsReviewableTest < Test::Unit::TestCase
       assert @reviewable_post.respond_to?(:reviews)
       assert @reviewable_article.respond_to?(:reviews)
       
-      @reviewable_post.review!(:reviewer => @user, :rating => 2.5)
-      @reviewable_post.review!(:reviewer => @user_2, :rating => 2.5)
+      @reviewable_post.review!(:by => @user, :rating => 2.5)
+      @reviewable_post.review!(:by => @user_2, :rating => 2.5)
       
       assert_equal 2, @reviewable_post.reviews.size
     end
@@ -67,9 +69,9 @@ class IsReviewableTest < Test::Unit::TestCase
       assert @reviewable_post.respond_to?(:reviewers)
       assert @reviewable_article.respond_to?(:reviewers)
       
-      @reviewable_post.review!(:reviewer => @user, :rating => 2.5)
-      @reviewable_post.review!(:reviewer => @user_2, :rating => 2.5)
-      @reviewable_post.review!(:reviewer => @user_3, :rating => 2.5)
+      @reviewable_post.review!(:by => @user, :rating => 2.5)
+      @reviewable_post.review!(:by => @user_2, :rating => 2.5)
+      @reviewable_post.review!(:by => @user_3, :rating => 2.5)
       
       assert_equal 3, @reviewable_post.reviewers.size
     end
@@ -79,21 +81,21 @@ class IsReviewableTest < Test::Unit::TestCase
     end
     
     should "count reviews and ratings based on IP correctly" do
-      @reviewable_post.review!(:reviewer => '128.0.0.0', :rating => 1)
-      @reviewable_post.review!(:reviewer => '128.0.0.1', :rating => 2.5)
+      @reviewable_post.review!(:by => '128.0.0.0', :rating => 1)
+      @reviewable_post.review!(:by => '128.0.0.1', :rating => 2.5)
       
       assert_equal 2, @reviewable_post.total_reviews
       assert_equal 1.75, @reviewable_post.average_rating # with precision set to 2
       
       # should not count as  new, but update values
-      @reviewable_post.review!(:reviewer => '128.0.0.1', :rating => 3)
+      @reviewable_post.review!(:by => '128.0.0.1', :rating => 3)
       
       assert_equal 2, @reviewable_post.total_reviews
       assert_equal 2.0, @reviewable_post.average_rating
       
       # should not count in the end
-      @reviewable_post.review!(:reviewer => '128.0.0.3', :rating => 1)
-      @reviewable_post.unreview!(:reviewer => '128.0.0.3', :rating => 1)
+      @reviewable_post.review!(:by => '128.0.0.3', :rating => 1)
+      @reviewable_post.unreview!(:by => '128.0.0.3', :rating => 1)
       
       assert_equal 2, @reviewable_post.total_reviews
       assert_equal 2.0, @reviewable_post.average_rating
@@ -101,47 +103,47 @@ class IsReviewableTest < Test::Unit::TestCase
     
     should "not accept any reviews on IP if disabled" do
       assert_raise ::IsReviewable::InvalidReviewerError do
-        @reviewable_article.review!(:reviewer => '128.0.0.0', :rating => 1)
+        @reviewable_article.review!(:by => '128.0.0.0', :rating => 1)
       end
     end
     
     should "count reviews based on reviewer object (user/account) correctly" do
-      @reviewable_post.review!(:reviewer => @user, :rating => 1)
-      @reviewable_post.review!(:reviewer => @user_2, :rating => 2.5)
+      @reviewable_post.review!(:by => @user, :rating => 1)
+      @reviewable_post.review!(:by => @user_2, :rating => 2.5)
       
       assert_equal 2, @reviewable_post.total_reviews
       assert_equal 1.75, @reviewable_post.average_rating # with precision set to 2
       
       # should not count as  new, but update values
-      @reviewable_post.review!(:reviewer => @user_2, :rating => 3)
+      @reviewable_post.review!(:by => @user_2, :rating => 3)
       
       assert_equal 2, @reviewable_post.total_reviews
       assert_equal 2.0, @reviewable_post.average_rating
       
       # should not count in the end
-      @reviewable_post.review!(:reviewer => @user_3, :rating => 1)
-      @reviewable_post.unreview!(:reviewer => @user_3, :rating => 1)
+      @reviewable_post.review!(:by => @user_3, :rating => 1)
+      @reviewable_post.unreview!(:by => @user_3, :rating => 1)
       
       assert_equal 2, @reviewable_post.total_reviews
       assert_equal 2.0, @reviewable_post.average_rating
     end
     
     should "count reviews based on both IP and reviewer object (user/account) correctly" do
-      @reviewable_post.review!(:reviewer => @user, :rating => 1)
-      @reviewable_post.review!(:reviewer => '128.0.0.2', :rating => 2.5)
+      @reviewable_post.review!(:by => @user, :rating => 1)
+      @reviewable_post.review!(:by => '128.0.0.2', :rating => 2.5)
       
       assert_equal 2, @reviewable_post.total_reviews
       assert_equal 1.75, @reviewable_post.average_rating # with precision set to 2
       
       # should not count as new, but update values
-      @reviewable_post.review!(:reviewer => '128.0.0.2', :rating => 3)
+      @reviewable_post.review!(:by => '128.0.0.2', :rating => 3)
       
       assert_equal 2, @reviewable_post.total_reviews
       assert_equal 2.0, @reviewable_post.average_rating
     end
     
     should "not count NULL-ratings, e.g. reviews skipping rating value" do
-      @reviewable_post.review!(:reviewer => @user, :rating => nil)
+      @reviewable_post.review!(:by => @user, :rating => nil)
       
       assert_equal 1, @reviewable_post.total_reviews
       assert_equal 0.0, @reviewable_post.average_rating
@@ -149,7 +151,7 @@ class IsReviewableTest < Test::Unit::TestCase
     
     should "not accept ratings out of rating scale range" do
       assert_raise ::IsReviewable::InvalidReviewValueError do
-        @reviewable_post.review!(:reviewer => @user, :rating => 6)
+        @reviewable_post.review!(:by => @user, :rating => 6)
       end
     end
     
@@ -157,20 +159,20 @@ class IsReviewableTest < Test::Unit::TestCase
       review_body = "Lorem ipsum dolor sit amet, consectetur adipisicing elit..."
       
       # just body
-      review_1 = @reviewable_post.review!(:reviewer => @user, :body => review_body)
+      review_1 = @reviewable_post.review!(:by => @user, :body => review_body)
       assert_equal(review_body, review_1.body)
       
       # body + rating
-      review_2 = @reviewable_post.review!(:reviewer => @user_2, :rating => 4, :body => review_body)
+      review_2 = @reviewable_post.review!(:by => @user_2, :rating => 4, :body => review_body)
       assert_equal(review_body, review_2.body)
     end
     
     should "save any additional non-reserved attribute values" do
-      review = @reviewable_post.review!(:reviewer => @user, :rating => 4, :title => "My title")
+      review = @reviewable_post.review!(:by => @user, :rating => 4, :title => "My title")
       assert_equal "My title", review.title
       
       # don't allow update of reserved fields
-      review = @reviewable_post.review!(:reviewer => @user_2, :reviewable_id => 666)
+      review = @reviewable_post.review!(:by => @user_2, :reviewable_id => 666)
       assert_not_equal 666, review.reviewable_id
     end
   end
@@ -182,8 +184,8 @@ class IsReviewableTest < Test::Unit::TestCase
       assert @account.respond_to?(:reviews)
       assert !@guest.respond_to?(:reviews)
       
-      ReviewablePost.create.review!(:reviewer => @user, :rating => 2.5)
-      ReviewablePost.create.review!(:reviewer => @user, :rating => 2.5)
+      ReviewablePost.create.review!(:by => @user, :rating => 2.5)
+      ReviewablePost.create.review!(:by => @user, :rating => 2.5)
       
       assert_equal 2, @user.reviews.size
     end
@@ -193,9 +195,9 @@ class IsReviewableTest < Test::Unit::TestCase
       assert @account.respond_to?(:reviewables)
       assert !@guest.respond_to?(:reviewables)
       
-      ReviewablePost.create.review!(:reviewer => @user, :rating => 2.5)
-      ReviewablePost.create.review!(:reviewer => @user, :rating => 2.5)
-      ReviewablePost.create.review!(:reviewer => @user, :rating => 2.5)
+      ReviewablePost.create.review!(:by => @user, :rating => 2.5)
+      ReviewablePost.create.review!(:by => @user, :rating => 2.5)
+      ReviewablePost.create.review!(:by => @user, :rating => 2.5)
       
       assert_equal 3, @user.reviewables.size
     end
@@ -221,8 +223,8 @@ class IsReviewableTest < Test::Unit::TestCase
     end
     
     should "return reviews by creation date with named scope :in_order" do
-      @reviewable_post.review!(:reviewer => @user, :rating => 1)
-      @reviewable_post.review!(:reviewer => @user_2, :rating => 2)
+      @reviewable_post.review!(:by => @user, :rating => 1)
+      @reviewable_post.review!(:by => @user_2, :rating => 2)
       
       # Old: This won't work...
       #assert_equal @user, @reviewable_post.reviews.in_order.first.reviewer

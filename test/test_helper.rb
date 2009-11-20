@@ -1,26 +1,22 @@
 # coding: utf-8
 require 'rubygems'
 
-gem 'test-unit',            '= 1.2.3'
-gem 'thoughtbot-shoulda',   '>= 2.10.2'
-gem 'sqlite3-ruby',         '>= 1.2.0'
-gem 'nakajima-acts_as_fu',  '>= 0.0.5'
-
-# Optional dependency
-begin
-  require 'monkeyspecdoc'
-rescue LoadError
+def smart_require(lib_name, gem_name, gem_version = '>= 0.0.0')
   begin
-    gem 'jgre-monkeyspecdoc',   '>= 0.9.5'
-    require 'monkeyspecdoc'
+    require lib_name if lib_name
   rescue LoadError
-    # skip
+    if gem_name
+      gem gem_name, gem_version
+      require lib_name if lib_name
+    end
   end
 end
 
-require 'test/unit'
-require 'shoulda'
-require 'acts_as_fu'
+smart_require 'test/unit', 'test-unit', '= 1.2.3'
+smart_require 'shoulda', 'shoulda', '>= 2.10.0'
+smart_require 'redgreen', 'redgreen', '>= 0.10.4'
+smart_require 'sqlite3', 'sqlite3-ruby', '>= 1.2.0'
+smart_require 'acts_as_fu', 'acts_as_fu', '>= 0.0.5'
 
 require 'test_helper'
 
