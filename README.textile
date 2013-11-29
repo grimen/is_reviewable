@@ -412,3 +412,5 @@ h2. License
 
 Released under the MIT license.
 Copyright (c) "Jonas Grimfelt":http://github.com/grimen
+
+!https://d2weczhvl823v0.cloudfront.net/grimen/is_reviewable/trend.png(Bitdeli Badge)!:https://bitdeli.com/free
